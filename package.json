@@ -1,0 +1,22 @@
+{
+  "name": "l-systems",
+  "version": "1.0.0",
+  "description": "Attepmt in procedual generation using l-systems and three.js",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/galtrapecar/l-systems.git"
+  },
+  "author": "Gal Trapečar",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/galtrapecar/l-systems/issues"
+  },
+  "homepage": "https://github.com/galtrapecar/l-systems#readme",
+  "dependencies": {
+    "three": "^0.141.0"
+  }
+}
