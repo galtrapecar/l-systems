@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import {GLTFLoader} from '/node_modules/three/examples/jsm/loaders/GLTFLoader.js';
 
 const PIXEL_RATIO = window.devicePixelRatio;
 
@@ -8,19 +9,39 @@ const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerH
 const renderer = new THREE.WebGLRenderer({antialias: true});
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(PIXEL_RATIO);
+renderer.setClearColor( 0xffffff, 0);
+renderer.outputEncoding = THREE.sRGBEncoding;
 document.body.appendChild(renderer.domElement);
 
-const geometry = new THREE.BoxGeometry(1, 1, 1);
-const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-const cube = new THREE.Mesh(geometry, material);
-scene.add(cube);
+const loader = new GLTFLoader();
+
+let carnation_seed = null;
+
+const light = new THREE.DirectionalLight(0xffffff, .5);
+light.position.set(-10, -10, 10);
+scene.add(light);
 
 camera.position.z = 5;
 
+loader.load(
+	'src/glb/carnation_seed.glb',
+	function (gltf) {
+		scene.add(gltf.scene);
+        carnation_seed = gltf.scene;
+	},
+	function (xhr) {
+		console.log((xhr.loaded / xhr.total * 100) + '% loaded');
+	},
+	function (error) {
+		console.log('An error happened');
+	}
+);
+
 function animate() {
 	requestAnimationFrame(animate);
-    cube.rotation.x += 0.01;
-    cube.rotation.y += 0.01;
+    if (carnation_seed != null) {
+        carnation_seed.rotation.y += .008;
+    }
 	renderer.render(scene, camera);
 }
 animate();
