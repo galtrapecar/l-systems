@@ -21,13 +21,40 @@ const light = new THREE.DirectionalLight(0xffffff, .5);
 light.position.set(-10, -10, 10);
 scene.add(light);
 
-camera.position.z = 5;
+camera.position.z = 4;
 
 loader.load(
 	'src/glb/carnation_seed.glb',
 	function (gltf) {
+        gltf.scene.position.y = -.3;
 		scene.add(gltf.scene);
         carnation_seed = gltf.scene;
+	},
+	function (xhr) {
+		console.log((xhr.loaded / xhr.total * 100) + '% loaded');
+	},
+	function (error) {
+		console.log('An error happened');
+	}
+);
+
+loader.load(
+	'src/glb/carnation_leaves.glb',
+	function (gltf) {
+		scene.add(gltf.scene);
+	},
+	function (xhr) {
+		console.log((xhr.loaded / xhr.total * 100) + '% loaded');
+	},
+	function (error) {
+		console.log('An error happened');
+	}
+);
+
+loader.load(
+	'src/glb/carnation_stem.glb',
+	function (gltf) {
+		scene.add(gltf.scene);
 	},
 	function (xhr) {
 		console.log((xhr.loaded / xhr.total * 100) + '% loaded');
