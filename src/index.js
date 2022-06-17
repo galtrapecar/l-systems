@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import {GLTFLoader} from '/node_modules/three/examples/jsm/loaders/GLTFLoader.js';
+import l_system from './l-system.js';
 
 const PIXEL_RATIO = window.devicePixelRatio;
 
@@ -23,46 +24,64 @@ scene.add(light);
 
 camera.position.z = 4;
 
-loader.load(
-	'src/glb/carnation_seed.glb',
-	function (gltf) {
-        gltf.scene.position.y = -.3;
-		scene.add(gltf.scene);
-        carnation_seed = gltf.scene;
-	},
-	function (xhr) {
-		console.log((xhr.loaded / xhr.total * 100) + '% loaded');
-	},
-	function (error) {
-		console.log('An error happened');
-	}
-);
+async function init() {
 
-loader.load(
-	'src/glb/carnation_leaves.glb',
-	function (gltf) {
-		scene.add(gltf.scene);
-	},
-	function (xhr) {
-		console.log((xhr.loaded / xhr.total * 100) + '% loaded');
-	},
-	function (error) {
-		console.log('An error happened');
-	}
-);
+	await loader.load(
+		'src/glb/carnation_seed.glb',
+		function (gltf) {
+			gltf.scene.position.y = -.3;
+			scene.add(gltf.scene);
+			carnation_seed = gltf.scene;
+		},
+		function (xhr) {
 
-loader.load(
-	'src/glb/carnation_stem.glb',
-	function (gltf) {
-		scene.add(gltf.scene);
-	},
-	function (xhr) {
-		console.log((xhr.loaded / xhr.total * 100) + '% loaded');
-	},
-	function (error) {
-		console.log('An error happened');
-	}
-);
+		},
+		function (error) {
+			console.log('An error happened');
+		}
+	);
+
+	console.log('Loaded carnation seed.');
+	
+	await loader.load(
+		'src/glb/carnation_leaves.glb',
+		function (gltf) {
+			scene.add(gltf.scene);
+		},
+		function (xhr) {
+
+		},
+		function (error) {
+			console.log('An error happened');
+		}
+	);
+
+	console.log('Loaded carnation leaves.');
+	
+	await loader.load(
+		'src/glb/carnation_stem.glb',
+		function (gltf) {
+			scene.add(gltf.scene);
+		},
+		function (xhr) {
+
+		},
+		function (error) {
+			console.log('An error happened');
+		}
+	);
+
+	console.log('Loaded carnation stem.');
+
+	// Make Carnation from L-System
+
+	
+
+}
+
+init().then(animate);
+
+
 
 function animate() {
 	requestAnimationFrame(animate);
@@ -71,7 +90,6 @@ function animate() {
     }
 	renderer.render(scene, camera);
 }
-animate();
 
 window.addEventListener('resize', on_window_resize);
 

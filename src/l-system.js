@@ -8,7 +8,7 @@ let rules = {
     M: 'LSM'
 }
 
-function l_system(progressions) {
+export default function l_system(progressions) {
     let result_system = axiom;
     for (let i = 0; i < progressions; i++) {
         result_system = l_system_progress(result_system);
@@ -25,8 +25,6 @@ function l_system_progress(system) {
     })
     return temp;
 }
-
-console.log(l_system(2));
 
 // Lehmer Random Number Generator
 
