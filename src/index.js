@@ -23,6 +23,7 @@ let carnation_bud = null;
 
 const light = new THREE.DirectionalLight(0xffffff, .5);
 light.position.set(-10, -10, 10);
+light.name = 'light';
 scene.add(light);
 
 camera.position.z = 6;
@@ -39,6 +40,7 @@ async function init() {
 	gltf.scene.position.y = -.3;
 	scene.add(gltf.scene);
 	carnation_seed = gltf.scene;
+	carnation_seed.name = 'seed';
 
 	console.log('Loaded carnation seed.');
 	
@@ -68,11 +70,21 @@ async function init() {
 
 	// Make Carnation from L-System
 
-	const lsystem = l_system(1);
+	let seed = 0;
 
-	l_system_make(lsystem);
+	document.addEventListener('keypress', () => {
+		seed++;
+		l_system_make(l_system(seed));
+	})
+
+	l_system_make(l_system(0));
 
 	function l_system_make(system) {
+		scene.children.forEach(child => {
+			if (child.name != 'seed' && child.name != 'light') {
+				scene.remove(child);
+			}
+		});
 
 		let position_y = 0;
 
