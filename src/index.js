@@ -17,65 +17,91 @@ document.body.appendChild(renderer.domElement);
 const loader = new GLTFLoader();
 
 let carnation_seed = null;
+let carnation_leaves = null;
+let carnation_stem = null;
+let carnation_bud = null;
 
 const light = new THREE.DirectionalLight(0xffffff, .5);
 light.position.set(-10, -10, 10);
 scene.add(light);
 
-camera.position.z = 4;
+camera.position.z = 6;
+camera.position.y = 4;
 
 async function init() {
 
-	await loader.load(
-		'src/glb/carnation_seed.glb',
-		function (gltf) {
-			gltf.scene.position.y = -.3;
-			scene.add(gltf.scene);
-			carnation_seed = gltf.scene;
-		},
-		function (xhr) {
+	console.log(scene);
 
-		},
-		function (error) {
-			console.log('An error happened');
-		}
+	let gltf = await loader.loadAsync(
+		'src/glb/carnation_seed.glb'
 	);
+
+	gltf.scene.position.y = -.3;
+	scene.add(gltf.scene);
+	carnation_seed = gltf.scene;
 
 	console.log('Loaded carnation seed.');
 	
-	await loader.load(
-		'src/glb/carnation_leaves.glb',
-		function (gltf) {
-			scene.add(gltf.scene);
-		},
-		function (xhr) {
-
-		},
-		function (error) {
-			console.log('An error happened');
-		}
+	gltf = await loader.loadAsync(
+		'src/glb/carnation_leaves.glb'
 	);
+
+	carnation_leaves = gltf.scene;
 
 	console.log('Loaded carnation leaves.');
 	
-	await loader.load(
-		'src/glb/carnation_stem.glb',
-		function (gltf) {
-			scene.add(gltf.scene);
-		},
-		function (xhr) {
-
-		},
-		function (error) {
-			console.log('An error happened');
-		}
+	gltf = await loader.loadAsync(
+		'src/glb/carnation_stem.glb'
 	);
+
+	carnation_stem = gltf.scene;
 
 	console.log('Loaded carnation stem.');
 
+	const geometry = new THREE.SphereGeometry( .5, 32, 16 );
+	const material = new THREE.MeshLambertMaterial( { color: 0xff0000 } );
+	const sphere = new THREE.Mesh( geometry, material );
+	carnation_bud = sphere;
+
+	console.log('Loaded carnation bud.');
+
+
 	// Make Carnation from L-System
 
-	
+	const lsystem = l_system(1);
+
+	l_system_make(lsystem);
+
+	function l_system_make(system) {
+
+		let position_y = 0;
+
+		system.split('').forEach(terminal => {
+			switch (terminal) {
+				case 'L':
+					let _carnation_leaves = carnation_leaves.clone();
+					_carnation_leaves.position.y = position_y;
+					console.log(_carnation_leaves);
+					scene.add(_carnation_leaves);
+					console.log('Added leaves to scene.');
+					break;
+				case 'S':
+					let _carnation_stem = carnation_stem.clone();
+					_carnation_stem.position.y = position_y;
+					position_y += 1.4;
+					console.log(_carnation_stem);
+					scene.add(_carnation_stem);
+					console.log('Added stem to scene.');
+					break;
+				case 'B':
+					position_y += .5;
+					carnation_bud.position.y = position_y;
+					scene.add(carnation_bud);
+					console.log('Added bud to scene.');
+					break;
+			}
+		});
+	}
 
 }
 
