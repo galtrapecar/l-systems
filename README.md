@@ -21,3 +21,37 @@ npx webpack
 - Lehmer RNG: https://en.wikipedia.org/wiki/Lehmer_random_number_generator
 - Video about procedual generation using Lehmer32 by javidx9 (16:00):
   - https://www.youtube.com/watch?v=ZZY9YE7rZJw
+
+# Notes
+
+Lehmer RNG was tested for equal distributions with the following script:
+
+```javascript
+function lehmer16(seed) {
+    seed += 3777035285;
+    let temp = 0;
+    temp = seed * 1245296397;
+    let m1 = (temp >> 16) ^ temp;
+    temp = m1 * 318428617;
+    let m2 = (temp >> 16) ^ temp;
+    return m2;
+}
+
+function lehmer16_0to10(seed) {
+    return lehmer16(seed) % 10;
+}
+
+let seed = Math.random() * 10;
+let distributions = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+for  (let i = 0; i < 10000; i++) {
+    distributions[lehmer16_0to10(seed)]++;
+    seed++;
+}
+
+distributions.forEach((number, n) => {
+    distributions[n] = distributions[n] / 1000
+});
+
+console.log(distributions);
+```
