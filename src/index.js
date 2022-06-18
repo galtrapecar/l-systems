@@ -72,7 +72,20 @@ async function init() {
 	// Make Carnation from L-System
 
 	let progressions = 0;
-	let carnation = {}
+	
+	class Carnation {
+		constructor() {
+			this.adjacent = new Map();
+		}
+		addVertex(v) {
+			this.adjacent.set(v, []);
+		}
+		addEdge(v, w) {
+			this.adjacent.get(v).push(w);
+		}
+	}
+
+	let carnation = new Carnation();
 
 	document.addEventListener('keypress', () => {
 		progressions++;
@@ -96,22 +109,15 @@ async function init() {
 		system.split('').forEach((terminal, n) => {
 			switch (terminal) {
 				case 'L':
-					l_system_draw_leaves();
-					console.log('Added leaves to scene.');
+					console.log('Added leaves to graph.');
 					break;
 				case 'S':
-					if (system.split('')[n - 2] == '+' && system.split('')[n - 2] == '[') {
-						l_system_draw_stem(0);
-					} else {
-						l_system_draw_stem(-angle);
-						console.log('Branched right.');
-					}
 					
-					console.log('Added stem to scene.');
+					console.log('Added stem to graph.');
 					break;
 				case 'B':
-					l_system_draw_bud();
-					console.log('Added bud to scene.');
+					
+					console.log('Added bud to graph.');
 					break;
 			}
 			console.log(terminal);
