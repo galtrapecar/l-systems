@@ -5,15 +5,16 @@
 // M - meristem ; 
 // B - bud ; 
 // L - leaves ;
-// [ - left branch ;
-// ] - right branch ;
+// + - right branch ;
+// [ - start branch ;
+// ] - end branch ;
 
 let SEED = 42057; // Makes 1 LSMB]SM branch on step 3
 const axiom = 'RMB';
 
 let rules = {
     M: {
-        rules: ['LSM', 'LSMB]LSM'],
+        rules: ['LSM', '+[SMB]M'],
         odds: [0, 0, 0, 0, 0, 0, 0, 0, 0, 1], // 0.9 -> 1st rule ; 0.1 -> 2nd rule
     }
 }
@@ -27,16 +28,19 @@ export default function l_system(progressions) {
 }
 
 function l_system_progress(system) {
-    let temp = system;
+    let _system = '';
     system.split('').forEach((terminal, n) => {
         if (rules[terminal]) {
             let odds = l_system_pick_odds(rules[terminal]['odds'].length);
             let index = rules[terminal]['odds'][odds];
             let rule = rules[terminal]['rules'][index];
-        	temp = temp.substring(0, n) + rule + temp.substring(n + 1, temp.length);
+        	_system += rule;
+        } else {
+            _system += terminal;
         }
+        console.log(_system);
     })
-    return temp;
+    return _system;
 }
 
 function l_system_pick_odds(length) {

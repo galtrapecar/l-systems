@@ -71,11 +71,12 @@ async function init() {
 
 	// Make Carnation from L-System
 
-	let seed = 0;
+	let progressions = 0;
+	let carnation = {}
 
 	document.addEventListener('keypress', () => {
-		seed++;
-		l_system_make(l_system(seed));
+		progressions++;
+		l_system_make(l_system(progressions));
 	})
 
 	l_system_make(l_system(0));
@@ -88,27 +89,29 @@ async function init() {
 		});
 
 		let position_y = 0;
+		let position_x = 0;
+		let prev_element = null;
 		let angle = 0.7853981634; // 45deg
 
 		system.split('').forEach((terminal, n) => {
 			switch (terminal) {
 				case 'L':
 					l_system_draw_leaves();
-					// console.log('Added leaves to scene.');
+					console.log('Added leaves to scene.');
 					break;
 				case 'S':
-					if (system.split('')[n - 1] != ']') {
+					if (system.split('')[n - 2] == '+' && system.split('')[n - 2] == '[') {
 						l_system_draw_stem(0);
 					} else {
 						l_system_draw_stem(-angle);
-						// console.log('Branched right.');
+						console.log('Branched right.');
 					}
 					
-					// console.log('Added stem to scene.');
+					console.log('Added stem to scene.');
 					break;
 				case 'B':
 					l_system_draw_bud();
-					// console.log('Added bud to scene.');
+					console.log('Added bud to scene.');
 					break;
 			}
 			console.log(terminal);
@@ -117,19 +120,24 @@ async function init() {
 		function l_system_draw_leaves() {
 			let _carnation_leaves = carnation_leaves.clone();
 			_carnation_leaves.position.y = position_y;
+			_carnation_leaves.position.x = position_x;
 			scene.add(_carnation_leaves);
+			prev_element = _carnation_leaves;
 		}
 	
 		function l_system_draw_stem(angle) {
 			let _carnation_stem = carnation_stem.clone();
 			_carnation_stem.position.y = position_y;
+			_carnation_stem.position.x = position_x;
 			_carnation_stem.rotation.z = angle;
 			position_y += 1.4;
 			scene.add(_carnation_stem);
+			prev_element = _carnation_stem;
 		}
 	
 		function l_system_draw_bud() {
 			carnation_bud.position.y = position_y;
+			carnation_bud.position.x = position_x;
 			scene.add(carnation_bud);
 		}
 	}
