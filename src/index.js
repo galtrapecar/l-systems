@@ -60,10 +60,11 @@ async function init() {
 
 	console.log('Loaded carnation stem.');
 
-	const geometry = new THREE.SphereGeometry( .5, 32, 16 );
-	const material = new THREE.MeshLambertMaterial( { color: 0xff0000 } );
-	const sphere = new THREE.Mesh( geometry, material );
-	carnation_bud = sphere;
+	gltf = await loader.loadAsync(
+		'src/glb/carnation_bud.glb'
+	);
+
+	carnation_bud = gltf.scene;
 
 	console.log('Loaded carnation bud.');
 
@@ -106,7 +107,6 @@ async function init() {
 					console.log('Added stem to scene.');
 					break;
 				case 'B':
-					position_y += .5;
 					carnation_bud.position.y = position_y;
 					scene.add(carnation_bud);
 					console.log('Added bud to scene.');
