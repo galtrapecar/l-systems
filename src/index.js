@@ -88,33 +88,51 @@ async function init() {
 		});
 
 		let position_y = 0;
+		let angle = 0.7853981634; // 45deg
 
-		system.split('').forEach(terminal => {
+		system.split('').forEach((terminal, n) => {
 			switch (terminal) {
 				case 'L':
-					let _carnation_leaves = carnation_leaves.clone();
-					_carnation_leaves.position.y = position_y;
-					console.log(_carnation_leaves);
-					scene.add(_carnation_leaves);
-					console.log('Added leaves to scene.');
+					l_system_draw_leaves();
+					// console.log('Added leaves to scene.');
 					break;
 				case 'S':
-					let _carnation_stem = carnation_stem.clone();
-					_carnation_stem.position.y = position_y;
-					position_y += 1.4;
-					console.log(_carnation_stem);
-					scene.add(_carnation_stem);
-					console.log('Added stem to scene.');
+					if (system.split('')[n - 1] != ']') {
+						l_system_draw_stem(0);
+					} else {
+						l_system_draw_stem(-angle);
+						// console.log('Branched right.');
+					}
+					
+					// console.log('Added stem to scene.');
 					break;
 				case 'B':
-					carnation_bud.position.y = position_y;
-					scene.add(carnation_bud);
-					console.log('Added bud to scene.');
+					l_system_draw_bud();
+					// console.log('Added bud to scene.');
 					break;
 			}
+			console.log(terminal);
 		});
-	}
 
+		function l_system_draw_leaves() {
+			let _carnation_leaves = carnation_leaves.clone();
+			_carnation_leaves.position.y = position_y;
+			scene.add(_carnation_leaves);
+		}
+	
+		function l_system_draw_stem(angle) {
+			let _carnation_stem = carnation_stem.clone();
+			_carnation_stem.position.y = position_y;
+			_carnation_stem.rotation.z = angle;
+			position_y += 1.4;
+			scene.add(_carnation_stem);
+		}
+	
+		function l_system_draw_bud() {
+			carnation_bud.position.y = position_y;
+			scene.add(carnation_bud);
+		}
+	}
 }
 
 init().then(animate);
