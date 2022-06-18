@@ -55,3 +55,7 @@ distributions.forEach((number, n) => {
 
 console.log(distributions);
 ```
+
+```javascript
+[ 0.976, 1.063, 1.011, 0.973, 0.968, 1.009, 0.979, 0.991, 1.066, 0.964 ]
+```
