@@ -72,20 +72,28 @@ async function init() {
 	// Make Carnation from L-System
 
 	let progressions = 0;
-	
-	class Carnation {
-		constructor() {
-			this.adjacent = new Map();
+
+	class Node {
+		constructor(params) {
+			this.name = params.name;
+			this.height = params.height;
+			this.position_x = params.position_x;
+			this.position_y = params.position_y;
+			this.position_z = params.position_z;
+			this.angle = 0.7853981634; // 45deg
+			this.children = [];
 		}
-		addVertex(v) {
-			this.adjacent.set(v, []);
-		}
-		addEdge(v, w) {
-			this.adjacent.get(v).push(w);
+
+		addChild(params) {
+			this.children.push(new Node({
+				   name: params.name,
+				   heigt: params.height,
+				   position_x: params.position_x,
+				   position_y: params.position_y,
+				   position_z: params.position_z
+			}));
 		}
 	}
-
-	let carnation = new Carnation();
 
 	document.addEventListener('keypress', () => {
 		progressions++;
@@ -95,16 +103,11 @@ async function init() {
 	l_system_make(l_system(0));
 
 	function l_system_make(system) {
-		scene.children.forEach(child => {
+		scene.children.forEach(child => { 
 			if (child.name != 'seed' && child.name != 'light') {
 				scene.remove(child);
 			}
 		});
-
-		let position_y = 0;
-		let position_x = 0;
-		let prev_element = null;
-		let angle = 0.7853981634; // 45deg
 
 		system.split('').forEach((terminal, n) => {
 			switch (terminal) {
