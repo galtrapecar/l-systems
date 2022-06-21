@@ -1,5 +1,7 @@
 import * as THREE from 'three';
 import {GLTFLoader} from '/node_modules/three/examples/jsm/loaders/GLTFLoader.js';
+import {OrbitControls} from '/node_modules/three/examples/jsm/controls/OrbitControls.js';
+import {RGBELoader} from '/node_modules/three/examples/jsm/loaders/RGBELoader.js'
 import l_system from './l-system.js';
 
 const PIXEL_RATIO = window.devicePixelRatio;
@@ -14,6 +16,8 @@ renderer.setClearColor( 0xffffff, 0);
 renderer.outputEncoding = THREE.sRGBEncoding;
 document.body.appendChild(renderer.domElement);
 
+const controls = new OrbitControls(camera, renderer.domElement);
+
 const loader = new GLTFLoader();
 
 let models = {
@@ -23,17 +27,33 @@ let models = {
 	bud: null
 }
 
+let carnation = new THREE.Group();
+carnation.name = 'carnation';
+
 const light = new THREE.DirectionalLight(0xffffff, .5);
 light.position.set(-10, -10, 10);
 light.name = 'light';
 scene.add(light);
 
+scene.position.y = -4;
 camera.position.z = 6;
-camera.position.y = 4;
+camera.position.y = 3;
+controls.update();
 
 async function init() {
 
-	console.log(scene);
+	new RGBELoader()
+		.setPath('textures/equirectangular/')
+		.load('royal_esplanade_1k.hdr', function (texture) {
+
+			texture.mapping = THREE.EquirectangularReflectionMapping;
+
+			scene.background = texture;
+			scene.environment = texture;
+
+			renderer.render();
+
+		});
 
 	let gltf = await loader.loadAsync(
 		'src/glb/carnation_seed.glb'
@@ -106,12 +126,14 @@ async function init() {
 	}
 
 	class LComponent {
+		static angle = 0.7853981634; // 45deg
+		static y_delta = 1.4;
+
 		constructor(params) {
 			this.name = params.name;
 			this.height = params.height;
 			this.position = params.position;
 			this.parent = params.parent;
-			this.angle = 0.7853981634; // 45deg
 			this.children = [];
 
 			if (params.id) { 
@@ -125,14 +147,26 @@ async function init() {
 			this.children.push(new LComponent({
 				   name: params.name,
 				   height: (this.height + 1),
-				   position: params.position,
+				   position: this.computePosition(params),
 				   parent: this
 			}));
+		}
+
+		computePosition(params) {
+			let x = params.position.x;
+			let y = params.position.y;
+			let z = params.position.z;
+
+			if (params.name == 'leaves' || params.name == 'bud') {
+				y = (LComponent.y_delta * this.height / 2);
+			}
+			return {x: x, y: y, z: z}
 		}
 	}
 
 	let ltree = new LTree();
 
+	console.log(l_system(0));
 	l_system_make(l_system(0));
 
 	document.addEventListener('keypress', () => {
@@ -143,31 +177,25 @@ async function init() {
 
 	function l_system_make(system) {
 		ltree = new LTree();
+		carnation = new THREE.Group();
+		clearThree(scene)
 
-		scene.children.forEach(child => { 
-			if (child.name != 'seed' && child.name != 'light') {
-				scene.remove(child);
-			}
-		});
+		let pause = (value) => new Promise(resolve => setTimeout(resolve, value));
 
 		system.split('').forEach((terminal, n) => {
 			switch (terminal) {
 				case 'L':
-					console.log("Adding Leaves ...");
 					l_system_add_component('leaves');
 					break;
 				case 'S':
-					console.log("Adding Stem ...");
 					l_system_add_component('stem');
 					break;
 				case 'B':
-					console.log("Adding Bud ...");
 					l_system_add_component('bud');
 					break;
 			}
 		});
 
-		console.log(ltree);
 		l_system_draw(ltree);
 	}
 
@@ -180,9 +208,9 @@ async function init() {
 	}
 
 	function l_system_draw(ltree) {
-		console.log('Draw called.');
 		let root = ltree.root;
-		l_system_draw_components(root);	
+		l_system_draw_components(root);
+		scene.add(carnation);
 	}
 
 	function l_system_draw_components(l_component) {
@@ -193,17 +221,15 @@ async function init() {
 	}
 
 	function l_system_add_to_scene(l_component) {
-		console.log('Add to scene called.');
 		let model = models[l_component.name];
-		console.log(model);
 		let _model = model.clone();
-		scene.add(_model);
+		_model.position.y = l_component.position.y;
+		carnation.add(_model);
+		console.log('Added: ' + l_component.name);
 	}
 }
 
 init().then(animate);
-
-
 
 function animate() {
 	requestAnimationFrame(animate);
@@ -220,3 +246,22 @@ function on_window_resize(){
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
 }
+
+function clearThree(obj){
+	while (obj.children.length > 0) {
+		if (obj.name == 'seed' || obj.name == 'light') return;
+		clearThree(obj.children[0]);
+		obj.remove(obj.children[0]);
+	}
+	if (obj.geometry) obj.geometry.dispose();
+
+	if (obj.material) {
+		Object.keys(obj.material).forEach(prop => {
+			if (!obj.material[prop])
+				return
+			if (obj.material[prop] !== null && typeof obj.material[prop].dispose === 'function')
+				obj.material[prop].dispose();
+		});
+		obj.material.dispose();
+	}
+}   
