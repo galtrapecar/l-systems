@@ -16,6 +16,10 @@ npm install three webpack webpack-cli
 npx webpack
 ```
 
+# Credits
+
+- HDR background for three.js demo by Poly Haven: https://polyhaven.com/a/fouriesburg_mountain_cloudy 
+
 # Papers, literature, references
 
 - Lehmer RNG: https://en.wikipedia.org/wiki/Lehmer_random_number_generator
