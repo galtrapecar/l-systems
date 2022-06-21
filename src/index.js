@@ -97,18 +97,52 @@ async function init() {
 	let progressions = 0;
 
 	class LTree {
+		static current_branch = 0;
+		// l - left, r - right, c - center
+		static current_side = 'c';
 		constructor() {
-			this.root = new LComponent({
-				name: 'root',
+			this.branches = [];
+			this.makeBranch({
 				id: 0,
-				height: 0,
-				position: {x: 0, y: 0, z: 0},
-				parent: null
+				connection_root: new LComponent({
+					name: 'root',
+					id: 0,
+					height: 0,
+					position: { x: 0, y: 0, z: 0 },
+					parent: null,
+					branch: null
+				})
 			});
 		}
 
+		makeBranch(params) {
+			let branch = new LBranch({
+				id: params.id,
+				connection_root: params.connection_root
+			});
+			this.branches.push(branch);
+		}
+	}
+
+	class LBranch {
+		constructor(params) {
+			this.id = params.id;
+			this.connection_root = params.connection_root;
+			this.position = {x: 0, y: 0, z: 0};
+			this.height = params.connection_root.height;
+			this.computePosition();
+		}
+
+		increaseHeight() {
+			this.height++;
+		}
+
+		getConnectionRoot() {
+			return this.connection_root;
+		}
+
 		getLatest() {
-			let component = this.recurse(this.root);
+			let component = this.recurse(this.connection_root);
 			return component;
 		}
 
@@ -116,13 +150,18 @@ async function init() {
 			let children = l_component.children;
 			if (children && children.length > 0) {
 				for (let i = 0; i < children.length; i++) {
-					// Needs return statement to return all the way up the stack
 					return this.recurse(children[i]);
 				}
 			} else if (children.length == 0) {
-				console.log(l_component);
 				return l_component;
 			}
+		}
+
+		computePosition() {
+			let x = this.connection_root.position + .5;
+			let y = this.connection_root.position;
+			let z = this.connection_root.position;
+			return { x: x, y: y, z: z }
 		}
 	}
 
@@ -132,36 +171,50 @@ async function init() {
 
 		constructor(params) {
 			this.name = params.name;
-			this.height = params.height;
 			this.position = params.position;
 			this.parent = params.parent;
-			this.children = [];
 			this.id = params.id;
+			this.children = [];
+
+			if (!params.branch) {
+				this.branch = 0;
+				this.height = 0;
+			} else {
+				this.branch = params.branch;
+				this.height = params.branch.height;
+			}
 		}
 
-		addChild(params, id) {
+		addChild(params) {
+			params.branch.increaseHeight();
 			this.children.push(new LComponent({
 				   name: params.name,
-				   height: (this.height + 1),
+				   height: params.branch.height,
 				   position: this.computePosition(params),
 				   parent: this,
-				   id: params.id
+				   id: params.id,
+				   branch: params.branch
 			}));
 		}
 
 		computePosition(params) {
-			let x = params.position.x;
+			let branch_id = params.id;
+
+			let x = params.branch.position.x;
 			let y = params.position.y;
-			let z = params.position.z;
+			let z = params.branch.position.z;
 
 			if (params.name == 'leaves' || params.name == 'bud') {
 				y = (LComponent.y_delta * this.height / 2);
 			}
+
+			if (params.id != 0) x = 1;
 			return {x: x, y: y, z: z}
 		}
 	}
 
 	let ltree = new LTree();
+	let branch_main = ltree.branches[0];
 
 	console.log(l_system(0));
 	l_system_make(l_system(0));
@@ -177,62 +230,60 @@ async function init() {
 		carnation = new THREE.Group();
 		clearThree(scene)
 
-		scene.add(models.seed.clone());
-
 		system.split('').forEach((terminal, n) => {
 			switch (terminal) {
+				case '-':
+					LTree.current_side = 'l';
+					LTree.current_branch++;
+					break;
+				case '+':
+					console.log('Hit branch!');
+					LTree.current_side = 'r';
+					LTree.current_branch++;
+					ltree.makeBranch({
+						id: LTree.current_branch,
+						connection_root: ltree.branches[LTree.current_branch - 1].getLatest(),
+					});
+					break;
+				case '[':
+					break;
+				case ']':
+					LTree.current_side = 'c';
+					LTree.current_branch--;
+					break;
 				case 'L':
-					look_forward(system, n);
+					console.log(`Added leaves to branch ${LTree.current_branch}`);
+					l_system_add_component('leaves', LTree.current_branch);
 					break;
 				case 'S':
-					l_system_add_component('stem');
+					console.log(`Added stem to branch ${LTree.current_branch}`);
+					l_system_add_component('stem', LTree.current_branch);
 					break;
 				case 'B':
-					l_system_add_component('bud');
+					console.log(`Added bud to branch ${LTree.current_branch}`);
+					l_system_add_component('bud', LTree.current_branch);
 					break;
 			}
 		});
 
+		console.log(ltree);
 		l_system_draw(ltree);
 	}
 
-	function look_forward(system, n) {
-		if (system[n + 1] == '+') {
-			make_right_branch(system, n);
-		} else {
-			l_system_add_component('leaves', 1);
-		}
-	}
-
-	function make_right_branch(system, n) {
-		n++; // starting at [
-		while (system[n] != ']') {
-			switch (system[n]) {
-				case 'L':
-					look_forward(system, n);
-					break;
-				case 'S':
-					l_system_add_component('stem', 1);
-					break;
-				case 'B':
-					l_system_add_component('bud', 1);
-					break;
-			}
-			n++; 
-		}
-	}
-
 	function l_system_add_component(type, id) {
-		let component = ltree.getLatest();
+		let component = ltree.branches[id].getLatest();
 		component.addChild({
 			name: type,
 			position: component.position,
+			id: id,
+			branch: ltree.branches[id]
 		});
 	}
 
 	function l_system_draw(ltree) {
-		let root = ltree.root;
-		l_system_draw_components(root);
+		ltree.branches.forEach(branch => {
+			l_system_draw_components(branch.connection_root);
+		});
 		scene.add(carnation);
 	}
 
@@ -247,8 +298,8 @@ async function init() {
 		let model = models[l_component.name];
 		let _model = model.clone();
 		_model.position.y = l_component.position.y;
+		_model.position.x = l_component.position.x;
 		carnation.add(_model);
-		console.log('Added: ' + l_component.name);
 	}
 }
 
