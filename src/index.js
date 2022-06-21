@@ -16,10 +16,12 @@ document.body.appendChild(renderer.domElement);
 
 const loader = new GLTFLoader();
 
-let carnation_seed = null;
-let carnation_leaves = null;
-let carnation_stem = null;
-let carnation_bud = null;
+let models = {
+	seed: null,
+	leaves: null,
+	stem: null,
+	bud: null
+}
 
 const light = new THREE.DirectionalLight(0xffffff, .5);
 light.position.set(-10, -10, 10);
@@ -39,8 +41,8 @@ async function init() {
 
 	gltf.scene.position.y = -.3;
 	scene.add(gltf.scene);
-	carnation_seed = gltf.scene;
-	carnation_seed.name = 'seed';
+	models.seed = gltf.scene;
+	models.seed.name = 'seed';
 
 	console.log('Loaded carnation seed.');
 	
@@ -48,7 +50,7 @@ async function init() {
 		'src/glb/carnation_leaves.glb'
 	);
 
-	carnation_leaves = gltf.scene;
+	models.leaves = gltf.scene;
 
 	console.log('Loaded carnation leaves.');
 	
@@ -56,7 +58,7 @@ async function init() {
 		'src/glb/carnation_stem.glb'
 	);
 
-	carnation_stem = gltf.scene;
+	models.stem = gltf.scene;
 
 	console.log('Loaded carnation stem.');
 
@@ -64,7 +66,7 @@ async function init() {
 		'src/glb/carnation_bud.glb'
 	);
 
-	carnation_bud = gltf.scene;
+	models.bud = gltf.scene;
 
 	console.log('Loaded carnation bud.');
 
@@ -73,36 +75,75 @@ async function init() {
 
 	let progressions = 0;
 
-	class Node {
+	class LTree {
+		constructor() {
+			this.root = new LComponent({
+				name: 'root',
+				id: 0,
+				height: 0,
+				position: {x: 0, y: 0, z: 0},
+				parent: null
+			});
+		}
+
+		getLatest() {
+			let component = this.recurse(this.root);
+			return component;
+		}
+
+		recurse(l_component) {
+			let children = l_component.children;
+			if (children && children.length > 0) {
+				for (let i = 0; i < children.length; i++) {
+					// Needs return statement to return all the way up the stack
+					return this.recurse(children[i]);
+				}
+			} else if (children.length == 0) {
+				console.log(l_component);
+				return l_component;
+			}
+		}
+	}
+
+	class LComponent {
 		constructor(params) {
 			this.name = params.name;
 			this.height = params.height;
-			this.position_x = params.position_x;
-			this.position_y = params.position_y;
-			this.position_z = params.position_z;
+			this.position = params.position;
+			this.parent = params.parent;
 			this.angle = 0.7853981634; // 45deg
 			this.children = [];
+
+			if (params.id) { 
+				this.id = params.id;
+			} else if (params.parent) {
+				this.id = params.parent.id;
+			}
 		}
 
 		addChild(params) {
-			this.children.push(new Node({
+			this.children.push(new LComponent({
 				   name: params.name,
-				   heigt: params.height,
-				   position_x: params.position_x,
-				   position_y: params.position_y,
-				   position_z: params.position_z
+				   height: (this.height + 1),
+				   position: params.position,
+				   parent: this
 			}));
 		}
 	}
 
-	document.addEventListener('keypress', () => {
-		progressions++;
-		l_system_make(l_system(progressions));
-	})
+	let ltree = new LTree();
 
 	l_system_make(l_system(0));
 
+	document.addEventListener('keypress', () => {
+		progressions++;
+		console.log(l_system(progressions));
+		l_system_make(l_system(progressions));
+	})
+
 	function l_system_make(system) {
+		ltree = new LTree();
+
 		scene.children.forEach(child => { 
 			if (child.name != 'seed' && child.name != 'light') {
 				scene.remove(child);
@@ -112,43 +153,51 @@ async function init() {
 		system.split('').forEach((terminal, n) => {
 			switch (terminal) {
 				case 'L':
-					console.log('Added leaves to graph.');
+					console.log("Adding Leaves ...");
+					l_system_add_component('leaves');
 					break;
 				case 'S':
-					
-					console.log('Added stem to graph.');
+					console.log("Adding Stem ...");
+					l_system_add_component('stem');
 					break;
 				case 'B':
-					
-					console.log('Added bud to graph.');
+					console.log("Adding Bud ...");
+					l_system_add_component('bud');
 					break;
 			}
-			console.log(terminal);
 		});
 
-		function l_system_draw_leaves() {
-			let _carnation_leaves = carnation_leaves.clone();
-			_carnation_leaves.position.y = position_y;
-			_carnation_leaves.position.x = position_x;
-			scene.add(_carnation_leaves);
-			prev_element = _carnation_leaves;
-		}
-	
-		function l_system_draw_stem(angle) {
-			let _carnation_stem = carnation_stem.clone();
-			_carnation_stem.position.y = position_y;
-			_carnation_stem.position.x = position_x;
-			_carnation_stem.rotation.z = angle;
-			position_y += 1.4;
-			scene.add(_carnation_stem);
-			prev_element = _carnation_stem;
-		}
-	
-		function l_system_draw_bud() {
-			carnation_bud.position.y = position_y;
-			carnation_bud.position.x = position_x;
-			scene.add(carnation_bud);
-		}
+		console.log(ltree);
+		l_system_draw(ltree);
+	}
+
+	function l_system_add_component(type) {
+		let component = ltree.getLatest();
+		component.addChild({
+			name: type,
+			position: component.position,
+		});
+	}
+
+	function l_system_draw(ltree) {
+		console.log('Draw called.');
+		let root = ltree.root;
+		l_system_draw_components(root);	
+	}
+
+	function l_system_draw_components(l_component) {
+		let children = l_component.children;
+		if (l_component.name == 'root') { for (let i = 0; i < children.length; i++) { return l_system_draw_components(children[i]); } }
+		l_system_add_to_scene(l_component);
+		for (let i = 0; i < children.length; i++) { return l_system_draw_components(children[i]); }
+	}
+
+	function l_system_add_to_scene(l_component) {
+		console.log('Add to scene called.');
+		let model = models[l_component.name];
+		console.log(model);
+		let _model = model.clone();
+		scene.add(_model);
 	}
 }
 
@@ -158,8 +207,8 @@ init().then(animate);
 
 function animate() {
 	requestAnimationFrame(animate);
-    if (carnation_seed != null) {
-        carnation_seed.rotation.y += .008;
+    if (models.seed != null) {
+        models.seed.rotation.y += .008;
     }
 	renderer.render(scene, camera);
 }

@@ -38,7 +38,7 @@ function l_system_progress(system) {
         } else {
             _system += terminal;
         }
-        console.log(_system);
+        // console.log(_system);
     })
     return _system;
 }
