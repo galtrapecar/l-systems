@@ -111,14 +111,16 @@ async function init() {
 					position: { x: 0, y: 0, z: 0 },
 					parent: null,
 					branch: null
-				})
+				}),
+				y_delta: 0
 			});
 		}
 
 		makeBranch(params) {
 			let branch = new LBranch({
 				id: params.id,
-				connection_root: params.connection_root
+				connection_root: params.connection_root,
+				y_delta: params.y_delta
 			});
 			this.branches.push(branch);
 		}
@@ -128,13 +130,17 @@ async function init() {
 		constructor(params) {
 			this.id = params.id;
 			this.connection_root = params.connection_root;
-			this.position = {x: 0, y: 0, z: 0};
 			this.height = params.connection_root.height;
-			this.computePosition();
+			this.position = this.computePosition();
+			this.y_delta = params.y_delta;
 		}
 
 		increaseHeight() {
 			this.height++;
+		}
+
+		increaseYDelta() {
+			this.y_delta += 1.4;
 		}
 
 		getConnectionRoot() {
@@ -158,9 +164,11 @@ async function init() {
 		}
 
 		computePosition() {
-			let x = this.connection_root.position + .5;
-			let y = this.connection_root.position;
-			let z = this.connection_root.position;
+			let x = this.connection_root.position.x + 1;
+			let y = this.connection_root.position.y;
+			let z = this.connection_root.position.z;
+
+			if (this.id == 0) return { x: 0, y: 0, z: 0 }
 			return { x: x, y: y, z: z }
 		}
 	}
@@ -198,23 +206,20 @@ async function init() {
 		}
 
 		computePosition(params) {
-			let branch_id = params.id;
-
 			let x = params.branch.position.x;
 			let y = params.position.y;
 			let z = params.branch.position.z;
 
 			if (params.name == 'leaves' || params.name == 'bud') {
-				y = (LComponent.y_delta * this.height / 2);
+				params.branch.increaseYDelta();
+				y = params.branch.y_delta;
 			}
 
-			if (params.id != 0) x = 1;
 			return {x: x, y: y, z: z}
 		}
 	}
 
 	let ltree = new LTree();
-	let branch_main = ltree.branches[0];
 
 	console.log(l_system(0));
 	l_system_make(l_system(0));
@@ -243,6 +248,7 @@ async function init() {
 					ltree.makeBranch({
 						id: LTree.current_branch,
 						connection_root: ltree.branches[LTree.current_branch - 1].getLatest(),
+						y_delta: ltree.branches[LTree.current_branch - 1].y_delta
 					});
 					break;
 				case '[':
@@ -252,15 +258,15 @@ async function init() {
 					LTree.current_branch--;
 					break;
 				case 'L':
-					console.log(`Added leaves to branch ${LTree.current_branch}`);
+					// console.log(`Added leaves to branch ${LTree.current_branch}`);
 					l_system_add_component('leaves', LTree.current_branch);
 					break;
 				case 'S':
-					console.log(`Added stem to branch ${LTree.current_branch}`);
+					// console.log(`Added stem to branch ${LTree.current_branch}`);
 					l_system_add_component('stem', LTree.current_branch);
 					break;
 				case 'B':
-					console.log(`Added bud to branch ${LTree.current_branch}`);
+					// console.log(`Added bud to branch ${LTree.current_branch}`);
 					l_system_add_component('bud', LTree.current_branch);
 					break;
 			}
@@ -272,6 +278,7 @@ async function init() {
 
 	function l_system_add_component(type, id) {
 		let component = ltree.branches[id].getLatest();
+		console.log(`Adding ${type} to Y: ${component.position.y}`);
 		component.addChild({
 			name: type,
 			position: component.position,
