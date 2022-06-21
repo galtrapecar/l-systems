@@ -9,18 +9,18 @@
 // [ - start branch ;
 // ] - end branch ;
 
-let SEED = 42057; // Makes 1 LSMB]SM branch on step 3
+let SEED = 42057; // Makes 1 branch on step 3
 const axiom = 'RMB';
 
 let rules = {
     M: {
-        // rules: ['LSM', '+[SMB]M'],
-        rules: ['LSM', 'LSM'],
+        rules: ['LSM', 'L+[SMB]SM'],
         odds: [0, 0, 0, 0, 0, 0, 0, 0, 0, 1], // 0.9 -> 1st rule ; 0.1 -> 2nd rule
     }
 }
 
 export default function l_system(progressions) {
+    SEED = 42057; // init seed
     let result_system = axiom;
     for (let i = 0; i < progressions; i++) {
         result_system = l_system_progress(result_system);
@@ -39,8 +39,8 @@ function l_system_progress(system) {
         } else {
             _system += terminal;
         }
-        // console.log(_system);
     })
+    console.log(_system);
     return _system;
 }
 

@@ -13,6 +13,7 @@ const renderer = new THREE.WebGLRenderer({antialias: true});
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(PIXEL_RATIO);
 renderer.setClearColor( 0xffffff, 0);
+renderer.toneMappingExposure = 1;
 renderer.outputEncoding = THREE.sRGBEncoding;
 document.body.appendChild(renderer.domElement);
 
@@ -43,8 +44,8 @@ controls.update();
 async function init() {
 
 	new RGBELoader()
-		.setPath('textures/equirectangular/')
-		.load('royal_esplanade_1k.hdr', function (texture) {
+		.setPath('src/hdr/')
+		.load('fouriesburg_mountain_cloudy_1k.hdr', function (texture) {
 
 			texture.mapping = THREE.EquirectangularReflectionMapping;
 
@@ -135,20 +136,16 @@ async function init() {
 			this.position = params.position;
 			this.parent = params.parent;
 			this.children = [];
-
-			if (params.id) { 
-				this.id = params.id;
-			} else if (params.parent) {
-				this.id = params.parent.id;
-			}
+			this.id = params.id;
 		}
 
-		addChild(params) {
+		addChild(params, id) {
 			this.children.push(new LComponent({
 				   name: params.name,
 				   height: (this.height + 1),
 				   position: this.computePosition(params),
-				   parent: this
+				   parent: this,
+				   id: params.id
 			}));
 		}
 
@@ -180,12 +177,12 @@ async function init() {
 		carnation = new THREE.Group();
 		clearThree(scene)
 
-		let pause = (value) => new Promise(resolve => setTimeout(resolve, value));
+		scene.add(models.seed.clone());
 
 		system.split('').forEach((terminal, n) => {
 			switch (terminal) {
 				case 'L':
-					l_system_add_component('leaves');
+					look_forward(system, n);
 					break;
 				case 'S':
 					l_system_add_component('stem');
@@ -199,7 +196,33 @@ async function init() {
 		l_system_draw(ltree);
 	}
 
-	function l_system_add_component(type) {
+	function look_forward(system, n) {
+		if (system[n + 1] == '+') {
+			make_right_branch(system, n);
+		} else {
+			l_system_add_component('leaves', 1);
+		}
+	}
+
+	function make_right_branch(system, n) {
+		n++; // starting at [
+		while (system[n] != ']') {
+			switch (system[n]) {
+				case 'L':
+					look_forward(system, n);
+					break;
+				case 'S':
+					l_system_add_component('stem', 1);
+					break;
+				case 'B':
+					l_system_add_component('bud', 1);
+					break;
+			}
+			n++; 
+		}
+	}
+
+	function l_system_add_component(type, id) {
 		let component = ltree.getLatest();
 		component.addChild({
 			name: type,
@@ -249,7 +272,6 @@ function on_window_resize(){
 
 function clearThree(obj){
 	while (obj.children.length > 0) {
-		if (obj.name == 'seed' || obj.name == 'light') return;
 		clearThree(obj.children[0]);
 		obj.remove(obj.children[0]);
 	}
