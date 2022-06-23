@@ -10,11 +10,11 @@
 // ] - end branch ;
 
 let SEED = 42057; // Makes 1 branch on step 3
-const axiom = 'RMB';
+const axiom = 'RML B';
 
 let rules = {
     M: {
-        rules: ['LSM', 'L+[SMB]SM'],
+        rules: ['LSM', 'L+[SMLB]SM'],
         odds: [0, 0, 0, 0, 0, 0, 0, 0, 0, 1], // 0.9 -> 1st rule ; 0.1 -> 2nd rule
     }
 }
@@ -45,19 +45,20 @@ function l_system_progress(system) {
 }
 
 function l_system_pick_odds(length) {
-    return lehmer16(SEED) % length;
+    return lehmer16() % length;
 }
 
 // Lehmer Random Number Generator
 
-function lehmer16(seed) {
-    SEED++;
+export function lehmer16() {
+    let seed = SEED;
     seed += 3777035285;
     let temp = 0;
     temp = seed * 1245296397;
     let m1 = (temp >> 16) ^ temp;
     temp = m1 * 318428617;
     let m2 = (temp >> 16) ^ temp;
+    SEED++;
     return m2;
 }
 

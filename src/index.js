@@ -3,6 +3,7 @@ import {GLTFLoader} from '/node_modules/three/examples/jsm/loaders/GLTFLoader.js
 import {OrbitControls} from '/node_modules/three/examples/jsm/controls/OrbitControls.js';
 import {RGBELoader} from '/node_modules/three/examples/jsm/loaders/RGBELoader.js'
 import l_system from './l-system.js';
+import lehmer16 from './l-system.js';
 
 const PIXEL_RATIO = window.devicePixelRatio;
 
@@ -96,130 +97,126 @@ async function init() {
 
 	let progressions = 0;
 
-	class LTree {
-		static current_branch = 0;
-		// l - left, r - right, c - center
-		static current_side = 'c';
+	class LSystem {
+		static current_branch_id = 0;
+
 		constructor() {
 			this.branches = [];
-			this.makeBranch({
-				id: 0,
-				connection_root: new LComponent({
-					name: 'root',
-					id: 0,
-					height: 0,
-					position: { x: 0, y: 0, z: 0 },
-					parent: null,
-					branch: null
-				}),
-				y_delta: 0
-			});
+
+			this.makeInitialBranch();
+		}
+
+		clear() {
+			this.branches = [];
+			this.makeInitialBranch();
 		}
 
 		makeBranch(params) {
 			let branch = new LBranch({
-				id: params.id,
-				connection_root: params.connection_root,
-				y_delta: params.y_delta
+				id: params.branch_id,
+				root: params.root,
 			});
 			this.branches.push(branch);
+		}
+
+		makeInitialBranch() {
+			let branch = new LBranch({
+				id: 0,
+				root: new LComponent({
+					type: 'root',
+					branch_id: 0,
+					branch: null,
+					position: {x: 0, y: 0, z: 0},
+					root: {position: {x: 0, y: 0, z: 0}}
+				}),
+			});
+			branch.root.branch = branch;
+			this.branches.push(branch);
+		}
+
+		addLComponent(type, branch_id) {
+			let branch = this.branches[branch_id];
+			if (branch === undefined) {
+				this.makeBranch({
+					id: branch_id,
+					root: this.branches[branch_id - 1].getLatest()
+				})
+			}
+			branch = this.branches[branch_id];
+			branch.addLComponent({
+				type: type,
+				branch_id: branch_id
+			});
 		}
 	}
 
 	class LBranch {
+
 		constructor(params) {
 			this.id = params.id;
-			this.connection_root = params.connection_root;
-			this.height = params.connection_root.height;
-			this.position = this.computePosition();
-			this.y_delta = params.y_delta;
-		}
-
-		increaseHeight() {
-			this.height++;
-		}
-
-		increaseYDelta() {
-			this.y_delta += 1.4;
-		}
-
-		getConnectionRoot() {
-			return this.connection_root;
+			this.root = params.root;
+			this.position = this.calculatePosition(params);
+			this.position_displace = this.calculatePositionDisplace();
+			this.l_components = [this.root];
 		}
 
 		getLatest() {
-			let component = this.recurse(this.connection_root);
-			return component;
+			return this.l_components[this.l_components.length - 1];
 		}
 
-		recurse(l_component) {
-			let children = l_component.children;
-			if (children && children.length > 0) {
-				for (let i = 0; i < children.length; i++) {
-					return this.recurse(children[i]);
-				}
-			} else if (children.length == 0) {
-				return l_component;
-			}
+		calculatePosition(params) {
+			let x = params.root.position.x;
+			let z = params.root.position.z;
+			let y = params.root.position.y;
+
+			return {x: x, y: y, z: z}
 		}
 
-		computePosition() {
-			let x = this.connection_root.position.x + 1;
-			let y = this.connection_root.position.y;
-			let z = this.connection_root.position.z;
+		calculatePositionDisplace() {
+			if (this.id === 0) return {x: 0, z: 0};
+			let x = (Math.random() * 2)
+			let z = (Math.random() * 2)
+			return {x: x, z: z};
+		}
 
-			if (this.id == 0) return { x: 0, y: 0, z: 0 }
-			return { x: x, y: y, z: z }
+		addLComponent(params) {
+			let l_component = new LComponent({
+				type: params.type,
+				branch_id: params.branch_id,
+				branch: this,
+				root: this.root
+			});
+			this.l_components.push(l_component);
 		}
 	}
 
 	class LComponent {
-		static angle = 0.7853981634; // 45deg
-		static y_delta = 1.4;
 
 		constructor(params) {
-			this.name = params.name;
-			this.position = params.position;
-			this.parent = params.parent;
-			this.id = params.id;
-			this.children = [];
-
-			if (!params.branch) {
-				this.branch = 0;
-				this.height = 0;
-			} else {
-				this.branch = params.branch;
-				this.height = params.branch.height;
-			}
+			this.type = params.type;
+			this.branch_id = params.branch_id;
+			this.branch = params.branch;
+			this.position = this.calculatePosition(params);
 		}
 
-		addChild(params) {
-			params.branch.increaseHeight();
-			this.children.push(new LComponent({
-				   name: params.name,
-				   height: params.branch.height,
-				   position: this.computePosition(params),
-				   parent: this,
-				   id: params.id,
-				   branch: params.branch
-			}));
-		}
+		calculatePosition(params) {
 
-		computePosition(params) {
-			let x = params.branch.position.x;
-			let y = params.position.y;
-			let z = params.branch.position.z;
+			let x = 0;
+			let z = 0;
+			let y = 0;
 
-			if (params.name == 'leaves' || params.name == 'bud') {
-				params.branch.increaseYDelta();
-				y = params.branch.y_delta;
+			if (params.branch) {
+				x = params.branch.position.x;
+				z = params.branch.position.z;
+				y = params.branch.getLatest().position.y;
+				if (params.type == 'leaves') y += 1.4;
 			}
 
 			return {x: x, y: y, z: z}
 		}
 	}
 
-	let ltree = new LTree();
+	const lsystem = new LSystem();
 
 	console.log(l_system(0));
 	l_system_make(l_system(0));
@@ -231,81 +228,70 @@ async function init() {
 	})
 
 	function l_system_make(system) {
-		ltree = new LTree();
+		lsystem.clear();
 		carnation = new THREE.Group();
 		clearThree(scene)
 
 		system.split('').forEach((terminal, n) => {
 			switch (terminal) {
 				case '-':
-					LTree.current_side = 'l';
-					LTree.current_branch++;
+					LSystem.current_branch_id++;
 					break;
 				case '+':
 					console.log('Hit branch!');
-					LTree.current_side = 'r';
-					LTree.current_branch++;
-					ltree.makeBranch({
-						id: LTree.current_branch,
-						connection_root: ltree.branches[LTree.current_branch - 1].getLatest(),
-						y_delta: ltree.branches[LTree.current_branch - 1].y_delta
-					});
+					LSystem.current_branch_id++;
 					break;
 				case '[':
 					break;
 				case ']':
-					LTree.current_side = 'c';
-					LTree.current_branch--;
+					LSystem.current_branch_id--;
 					break;
 				case 'L':
-					// console.log(`Added leaves to branch ${LTree.current_branch}`);
-					l_system_add_component('leaves', LTree.current_branch);
+					// console.log(`Added leaves to branch ${LSystem.current_branch_id}`);
+					l_system_add_component('leaves', LSystem.current_branch_id);
 					break;
 				case 'S':
-					// console.log(`Added stem to branch ${LTree.current_branch}`);
-					l_system_add_component('stem', LTree.current_branch);
+					// console.log(`Added stem to branch ${LSystem.current_branch_id}`);
+					l_system_add_component('stem', LSystem.current_branch_id);
 					break;
 				case 'B':
-					// console.log(`Added bud to branch ${LTree.current_branch}`);
-					l_system_add_component('bud', LTree.current_branch);
+					// console.log(`Added bud to branch ${LSystem.current_branch_id}`);
+					l_system_add_component('bud', LSystem.current_branch_id);
 					break;
 			}
 		});
 
-		console.log(ltree);
-		l_system_draw(ltree);
+		console.log(lsystem);
+		l_system_draw();
 	}
 
-	function l_system_add_component(type, id) {
-		let component = ltree.branches[id].getLatest();
-		console.log(`Adding ${type} to Y: ${component.position.y}`);
-		component.addChild({
-			name: type,
-			position: component.position,
-			id: id,
-			branch: ltree.branches[id]
-		});
+	function l_system_add_component(type, branch_id) {
+		lsystem.addLComponent(type, branch_id);
 	}
 
-	function l_system_draw(ltree) {
-		ltree.branches.forEach(branch => {
-			l_system_draw_components(branch.connection_root);
+	function l_system_draw() {
+		lsystem.branches.forEach(branch => {
+			l_system_draw_components(branch);
 		});
+		console.log(carnation);
 		scene.add(carnation);
 	}
 
-	function l_system_draw_components(l_component) {
-		let children = l_component.children;
-		if (l_component.name == 'root') { for (let i = 0; i < children.length; i++) { return l_system_draw_components(children[i]); } }
-		l_system_add_to_scene(l_component);
-		for (let i = 0; i < children.length; i++) { return l_system_draw_components(children[i]); }
+	function l_system_draw_components(branch) {
+		let l_components = branch.l_components;
+		l_components.forEach(l_component => {
+			l_system_add_to_scene(l_component);
+		});
 	}
 
 	function l_system_add_to_scene(l_component) {
-		let model = models[l_component.name];
+		if (l_component.type == 'root') return;
+		let model = models[l_component.type];
 		let _model = model.clone();
+		_model.position.x = l_component.position.x + l_component.branch.position_displace.x;
+		_model.position.z = l_component.position.z + l_component.branch.position_displace.x;
+
 		_model.position.y = l_component.position.y;
-		_model.position.x = l_component.position.x;
 		carnation.add(_model);
 	}
 }
