@@ -9,8 +9,33 @@
 // [ - start branch ;
 // ] - end branch ;
 
-let SEED = 42057; // Makes 1 branch on step 3
-const axiom = 'RML B';
+// Lehmer Random Number Generator
+export class Lehmer16 {
+    constructor(seed) {
+        this.seed = seed;
+    }
+
+    next() {
+        let lehmer16 = this.lehmer16();
+        this.seed++;
+        return lehmer16;
+    }
+
+    lehmer16() {
+        let seed = this.seed;
+        seed += 3777035285;
+        let temp = 0;
+        temp = seed * 1245296397;
+        let m1 = (temp >> 16) ^ temp;
+        temp = m1 * 318428617;
+        let m2 = (temp >> 16) ^ temp;
+        return m2;
+    }
+}
+
+const SEED = 42057; // Makes 1 branch on step 3
+const lehmer16 = new Lehmer16(SEED);
+const axiom = 'RMLB';
 
 let rules = {
     M: {
@@ -20,7 +45,7 @@ let rules = {
 }
 
 export default function l_system(progressions) {
-    SEED = 42057; // init seed
+    lehmer16.seed = SEED; // init seed
     let result_system = axiom;
     for (let i = 0; i < progressions; i++) {
         result_system = l_system_progress(result_system);
@@ -45,23 +70,5 @@ function l_system_progress(system) {
 }
 
 function l_system_pick_odds(length) {
-    return lehmer16() % length;
-}
-
-// Lehmer Random Number Generator
-
-export function lehmer16() {
-    let seed = SEED;
-    seed += 3777035285;
-    let temp = 0;
-    temp = seed * 1245296397;
-    let m1 = (temp >> 16) ^ temp;
-    temp = m1 * 318428617;
-    let m2 = (temp >> 16) ^ temp;
-    SEED++;
-    return m2;
-}
-
-function lehmer16_0to10(seed) {
-    return lehmer16(seed) % 10;
+    return lehmer16.next() % length;
 }

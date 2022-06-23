@@ -3,9 +3,12 @@ import {GLTFLoader} from '/node_modules/three/examples/jsm/loaders/GLTFLoader.js
 import {OrbitControls} from '/node_modules/three/examples/jsm/controls/OrbitControls.js';
 import {RGBELoader} from '/node_modules/three/examples/jsm/loaders/RGBELoader.js'
 import l_system from './l-system.js';
-import lehmer16 from './l-system.js';
+import { Lehmer16 } from './l-system.js';
 
 const PIXEL_RATIO = window.devicePixelRatio;
+
+const SEED = 42057;
+const lehmer16 = new Lehmer16(SEED);
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -174,8 +177,9 @@ async function init() {
 
 		calculatePositionDisplace() {
 			if (this.id === 0) return {x: 0, z: 0};
-			let x = (Math.random() * 2)
-			let z = (Math.random() * 2)
+			let x = lehmer16.next() % 10
+			let z = lehmer16.next() % 10
+			console.log(x + ' ' + z);
 			return {x: x, z: z};
 		}
 
@@ -229,6 +233,7 @@ async function init() {
 
 	function l_system_make(system) {
 		lsystem.clear();
+		lehmer16.seed = SEED;
 		carnation = new THREE.Group();
 		clearThree(scene)
 
