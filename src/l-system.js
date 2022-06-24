@@ -44,6 +44,7 @@ let rules = {
     }
 }
 
+
 export default function l_system(progressions) {
     lehmer16.seed = SEED; // init seed
     let result_system = axiom;
