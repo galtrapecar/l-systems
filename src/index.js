@@ -177,8 +177,11 @@ async function init() {
 
 		calculatePositionDisplace() {
 			if (this.id === 0) return {x: 0, z: 0};
-			let x = lehmer16.next() % 10
-			let z = lehmer16.next() % 10
+			// Random position on a perimeter of a circle: https://stackoverflow.com/a/50746409
+			const R = 1;
+			let theta = (lehmer16.next() % 11 / 10) * 2 * Math.PI;
+			let x = this.position.x + 1 * Math.sin(theta);
+			let z = this.position.z + 1 * Math.cos(theta);
 			console.log(x + ' ' + z);
 			return {x: x, z: z};
 		}
@@ -294,7 +297,7 @@ async function init() {
 		let model = models[l_component.type];
 		let _model = model.clone();
 		_model.position.x = l_component.position.x + l_component.branch.position_displace.x;
-		_model.position.z = l_component.position.z + l_component.branch.position_displace.x;
+		_model.position.z = l_component.position.z + l_component.branch.position_displace.z;
 
 		_model.position.y = l_component.position.y;
 		carnation.add(_model);
