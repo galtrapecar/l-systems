@@ -32,6 +32,13 @@ let models = {
 	bud: null
 }
 
+let emojis = {
+	seed: '🌰',
+	leaves: '🌿',
+	stem: '🥒',
+	bud: '🌺',
+}
+
 let stem = null;
 
 let carnation = new THREE.Group();
@@ -58,7 +65,7 @@ async function init() {
 			scene.background = texture;
 			scene.environment = texture;
 
-			renderer.render();
+			renderer.render(scene, camera);
 
 		});
 
@@ -71,7 +78,7 @@ async function init() {
 	models.seed = gltf.scene;
 	models.seed.name = 'seed';
 
-	console.log('Loaded carnation seed.');
+	console.log(`🔄${emojis['seed']} : Loaded carnation seed.`);
 	
 	gltf = await loader.loadAsync(
 		'src/glb/carnation_leaves.glb'
@@ -79,7 +86,7 @@ async function init() {
 
 	models.leaves = gltf.scene;
 
-	console.log('Loaded carnation leaves.');
+	console.log(`🔄${emojis['leaves']} : Loaded carnation leaves.`);
 	
 	gltf = await loader.loadAsync(
 		'src/glb/carnation_stem.glb'
@@ -87,7 +94,7 @@ async function init() {
 
 	models.stem = gltf.scene;
 
-	console.log('Loaded carnation stem.');
+	console.log(`🔄${emojis['stem']} : Loaded carnation stem.`);
 
 	gltf = await loader.loadAsync(
 		'src/glb/carnation_bud.glb'
@@ -95,7 +102,7 @@ async function init() {
 
 	models.bud = gltf.scene;
 
-	console.log('Loaded carnation bud.');
+	console.log(`🔄${emojis['bud']} : Loaded carnation bud.`);
 
 
 	// Make Carnation from L-System
@@ -233,8 +240,6 @@ async function init() {
 					let angle = this.branch.theta;
 					model.rotateX(LSystem.angle);
 					model.rotateOnWorldAxis(new THREE.Vector3(0, 1, 0), angle);
-					console.log(angle);
-					console.log('Added root stem: ' + `${model.position.x} ${model.position.z} ${model.rotation.y} ${model.rotation.x}`);
 				} else {
 					model.position.x = this.position.x;
 					model.position.z = this.position.z;
@@ -250,8 +255,6 @@ async function init() {
 			let y = 0;
 
 			if (params.branch) {
-				// x = params.branch.position.x;
-				// z = params.branch.position.z;
 				y = params.branch.getLatest().position.y;
 				if (params.type == 'leaves') {
 					if (params.branch_id != 0 && params.branch.children.length == 1) {
@@ -268,11 +271,16 @@ async function init() {
 
 	const lsystem = new LSystem();
 
+	console.log('\n');
+	console.log(`💬 : ${l_system(0)}`);
+	console.log('\n');
 	l_system_make(l_system(0));
 
 	document.addEventListener('keypress', () => {
 		progressions++;
-		console.log(l_system(progressions));
+		console.log('\n');
+		console.log(`💬 : ${l_system(progressions)}`);
+		console.log('\n');
 		l_system_make(l_system(progressions));
 	})
 
@@ -291,11 +299,15 @@ async function init() {
 					LSystem.current_branch_id++;
 					break;
 				case '[':
-					console.log(`Hit branch ${LSystem.current_branch_id}!`);
+					console.log('\n');
+					console.log(`🪵 : Hit branch ${LSystem.current_branch_id}!`);
+					console.log('\n');
 					break;
 				case ']':
 					LSystem.current_branch_id--;
-					console.log(`Ended branch ${LSystem.current_branch_id + 1}!`);
+					console.log('\n');
+					console.log(`🪵✖️ : Ended branch ${LSystem.current_branch_id + 1}!`);
+					console.log('\n');
 					break;
 				case 'L':
 					l_system_add_component('leaves', LSystem.current_branch_id);
@@ -309,14 +321,15 @@ async function init() {
 			}
 		});
 
-		console.log(lsystem);
+		console.log('\n');
+		((lsystem) => {const log = console.log.bind(window.console, '🌳'); log(lsystem)})(lsystem);
 		l_system_draw();
 	}
 
 	function l_system_add_component(type, branch_id) {
 		let model = models[type];
 		let _model = model.clone();
-		console.log(`Added ${type} to branch ${LSystem.current_branch_id}`);
+		console.log(`➕${emojis[type]} ${LSystem.current_branch_id} : Added ${type} to branch ${LSystem.current_branch_id}`);
 		lsystem.addLComponent(_model, type, branch_id);
 	}
 
@@ -325,45 +338,10 @@ async function init() {
 			carnation.add(branch);
 		});
 		scene.add(carnation);
-		console.log(carnation);
-	}
-
-	function l_system_draw_components2(branch) {
-		scene.add(branch)
-	}
-
-	function l_system_draw_components(branch) {
-		let l_components = branch.l_components;
-		l_components.forEach((l_component, i) => {
-			l_system_add_to_scene(l_component, i);
-		});
-	}
-
-	function l_system_add_to_scene(l_component, i) {
-		if (l_component.type == 'root') return;
-		let model = models[l_component.type];
-		let _model = model.clone();
-		// Tilt first stem in branch
-		if (l_component.branch_id != 0 && i == 1) {
-			_model.position.x = l_component.position.x - l_component.branch.position_displace.x;
-			_model.position.z = l_component.position.z - l_component.branch.position_displace.z;
-			let angle = l_component.branch.theta;
-			_model.rotateX(LSystem.angle);
-			_model.rotateOnWorldAxis(new THREE.Vector3(0, 1, 0), angle);
-			console.log(angle);
-			console.log('Added root stem: ' + `${_model.position.x} ${_model.position.z} ${_model.rotation.y} ${_model.rotation.x}`);
-		} else {
-			_model.position.x = l_component.position.x;
-			_model.position.z = l_component.position.z;
-		}
-
-		_model.position.y = l_component.position.y;
-		carnation.add(_model);
 	}
 }
 
 init().then(animate);
-let rot = 0;
 function animate() {
 	requestAnimationFrame(animate);
     if (models.seed != null) {
