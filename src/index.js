@@ -32,6 +32,8 @@ let models = {
 	bud: null
 }
 
+let stem = null;
+
 let carnation = new THREE.Group();
 carnation.name = 'carnation';
 
@@ -102,6 +104,7 @@ async function init() {
 
 	class LSystem {
 		static current_branch_id = 0;
+		static angle = (45 * Math.PI / 180);
 
 		constructor() {
 			this.branches = [];
@@ -216,7 +219,13 @@ async function init() {
 				x = params.branch.position.x;
 				z = params.branch.position.z;
 				y = params.branch.getLatest().position.y;
-				if (params.type == 'leaves') y += 1.4;
+				if (params.type == 'leaves') {
+					if (params.branch_id != 0 && params.branch.l_components.length == 2) {
+						y += Math.asin(LSystem.angle) + .1;
+					} else {
+						y += 1.4;
+					}
+				}
 			}
 
 			return {x: x, y: y, z: z}
@@ -287,17 +296,28 @@ async function init() {
 
 	function l_system_draw_components(branch) {
 		let l_components = branch.l_components;
-		l_components.forEach(l_component => {
-			l_system_add_to_scene(l_component);
+		l_components.forEach((l_component, i) => {
+			l_system_add_to_scene(l_component, i);
 		});
 	}
 
-	function l_system_add_to_scene(l_component) {
+	function l_system_add_to_scene(l_component, i) {
 		if (l_component.type == 'root') return;
 		let model = models[l_component.type];
 		let _model = model.clone();
-		_model.position.x = l_component.position.x + l_component.branch.position_displace.x;
-		_model.position.z = l_component.position.z + l_component.branch.position_displace.z;
+		// Tilt first stem in branch
+		if (l_component.branch_id != 0 && i == 1) {
+			stem = _model;
+			_model.position.x = l_component.position.x;
+			_model.position.z = l_component.position.z;
+			let angle = - Math.acos(l_component.branch.position_displace.z);
+			_model.rotateX(LSystem.angle);
+			_model.rotateOnWorldAxis(new THREE.Vector3(0, 1, 0), angle)
+			// _model.rotateZ(angle);
+		} else {
+			_model.position.x = l_component.position.x + l_component.branch.position_displace.x;
+			_model.position.z = l_component.position.z + l_component.branch.position_displace.z;
+		}
 
 		_model.position.y = l_component.position.y;
 		carnation.add(_model);
@@ -305,7 +325,7 @@ async function init() {
 }
 
 init().then(animate);
-
+let rot = 0;
 function animate() {
 	requestAnimationFrame(animate);
     if (models.seed != null) {

@@ -40,7 +40,7 @@ const axiom = 'RMLB';
 let rules = {
     M: {
         rules: ['LSM', 'L+[SMLB]SM'],
-        odds: [0, 0, 0, 0, 0, 0, 0, 0, 0, 1], // 0.9 -> 1st rule ; 0.1 -> 2nd rule
+        odds: [0, 0, 0, 0, 0, 0, 0, 1, 1, 1], // 0.7 -> 1st rule ; 0.3 -> 2nd rule
     }
 }
 
