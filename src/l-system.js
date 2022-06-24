@@ -33,7 +33,7 @@ export class Lehmer16 {
     }
 }
 
-const SEED = 1003;
+const SEED = Math.random() * 42069;
 const lehmer16 = new Lehmer16(SEED);
 const axiom = 'RMLB';
 
