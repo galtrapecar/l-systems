@@ -43,7 +43,7 @@ function lehmer16(seed) {
     return m2;
 }
 
-function lehmer16_0to10(seed) {
+function lehmer16_0to9(seed) {
     return lehmer16(seed) % 10;
 }
 
@@ -51,7 +51,7 @@ let seed = Math.random() * 10;
 let distributions = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
 for  (let i = 0; i < 10000; i++) {
-    distributions[lehmer16_0to10(seed)]++;
+    distributions[lehmer16_0to9(seed)]++;
     seed++;
 }
 
