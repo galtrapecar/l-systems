@@ -5,7 +5,7 @@
 // M - meristem ; 
 // B - bud ; 
 // L - leaves ;
-// + - right branch ;
+// + - make branch ;
 // [ - start branch ;
 // ] - end branch ;
 
@@ -33,7 +33,7 @@ export class Lehmer16 {
     }
 }
 
-const SEED = 42057; // Makes 1 branch on step 3
+const SEED = 1003;
 const lehmer16 = new Lehmer16(SEED);
 const axiom = 'RMLB';
 
@@ -65,7 +65,6 @@ function l_system_progress(system) {
             _system += terminal;
         }
     })
-    console.log(_system);
     return _system;
 }
 

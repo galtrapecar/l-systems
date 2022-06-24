@@ -140,7 +140,7 @@ async function init() {
 			this.branches.push(branch);
 		}
 
-		addLComponent(type, branch_id) {
+		addLComponent(model, type, branch_id) {
 			let branch = this.branches[branch_id];
 			if (branch === undefined) {
 				this.makeBranch({
@@ -150,43 +150,54 @@ async function init() {
 			}
 			branch = this.branches[branch_id];
 			branch.addLComponent({
+				model: model,
 				type: type,
-				branch_id: branch_id
+				branch_id: branch_id,
 			});
 		}
 	}
 
-	class LBranch {
+	class LBranch extends THREE.Group {
 
 		constructor(params) {
-			this.id = params.id;
+			super();
+			this.ID = params.id;
 			this.root = params.root;
-			this.position = this.calculatePosition(params);
+			this.theta = 0;
+			this.setPosition(params);
 			this.position_displace = this.calculatePositionDisplace();
-			this.l_components = [this.root];
+			this.addPositionDisplaceToPosition();
 		}
 
 		getLatest() {
-			return this.l_components[this.l_components.length - 1];
+			if (this.children.length == 0) return {position: {x: 0, y: 0, z: 0}};
+			return this.children[this.children.length - 1];
 		}
 
-		calculatePosition(params) {
+		setPosition(params) {
 			let x = params.root.position.x;
 			let z = params.root.position.z;
 			let y = params.root.position.y;
 
-			return {x: x, y: y, z: z}
+			this.position.set(x, y, z);
 		}
 
 		calculatePositionDisplace() {
-			if (this.id === 0) return {x: 0, z: 0};
+			if (this.ID === 0) return {x: 0, z: 0};
 			// Random position on a perimeter of a circle: https://stackoverflow.com/a/50746409
 			const R = 1;
-			let theta = (lehmer16.next() % 11 / 10) * 2 * Math.PI;
-			let x = this.position.x + 1 * Math.sin(theta);
-			let z = this.position.z + 1 * Math.cos(theta);
-			console.log(x + ' ' + z);
+			this.theta = (lehmer16.next() % 11 / 10) * 2 * Math.PI;
+			let x = (this.position.x + 1) * Math.sin(this.theta);
+			let z = (this.position.z + 1) * Math.cos(this.theta);
 			return {x: x, z: z};
+		}
+
+		addPositionDisplaceToPosition() {
+			let x = this.position.x + this.position_displace.x;
+			let z = this.position.z + this.position_displace.z;
+			let y = this.position.y;
+
+			this.position.set(x, y, z);
 		}
 
 		addLComponent(params) {
@@ -194,33 +205,56 @@ async function init() {
 				type: params.type,
 				branch_id: params.branch_id,
 				branch: this,
-				root: this.root
+				model: params.model,
+				root: this.root,
+				first_stem: params.first_stem,
 			});
-			this.l_components.push(l_component);
+			this.add(l_component);
 		}
 	}
 
-	class LComponent {
+	class LComponent extends THREE.Group {
 
 		constructor(params) {
+			super();
 			this.type = params.type;
+			this.model = params.model;
 			this.branch_id = params.branch_id;
 			this.branch = params.branch;
-			this.position = this.calculatePosition(params);
+			this.setPosition(params);
+			this.setModel(params.model);
 		}
 
-		calculatePosition(params) {
+		setModel(model) {
+			if (model) {
+				if (this.branch_id != 0 && this.position.y == 0) {
+					model.position.x = this.position.x - this.branch.position_displace.x;
+					model.position.z = this.position.z - this.branch.position_displace.z;
+					let angle = this.branch.theta;
+					model.rotateX(LSystem.angle);
+					model.rotateOnWorldAxis(new THREE.Vector3(0, 1, 0), angle);
+					console.log(angle);
+					console.log('Added root stem: ' + `${model.position.x} ${model.position.z} ${model.rotation.y} ${model.rotation.x}`);
+				} else {
+					model.position.x = this.position.x;
+					model.position.z = this.position.z;
+				}
+				this.add(model);
+			}
+				
+		}
 
+		setPosition(params) {
 			let x = 0;
 			let z = 0;
 			let y = 0;
 
 			if (params.branch) {
-				x = params.branch.position.x;
-				z = params.branch.position.z;
+				// x = params.branch.position.x;
+				// z = params.branch.position.z;
 				y = params.branch.getLatest().position.y;
 				if (params.type == 'leaves') {
-					if (params.branch_id != 0 && params.branch.l_components.length == 2) {
+					if (params.branch_id != 0 && params.branch.children.length == 1) {
 						y += Math.asin(LSystem.angle) + .1;
 					} else {
 						y += 1.4;
@@ -228,13 +262,12 @@ async function init() {
 				}
 			}
 
-			return {x: x, y: y, z: z}
+			this.position.set(x, y, z);
 		}
 	}
 
 	const lsystem = new LSystem();
 
-	console.log(l_system(0));
 	l_system_make(l_system(0));
 
 	document.addEventListener('keypress', () => {
@@ -255,24 +288,22 @@ async function init() {
 					LSystem.current_branch_id++;
 					break;
 				case '+':
-					console.log('Hit branch!');
 					LSystem.current_branch_id++;
 					break;
 				case '[':
+					console.log(`Hit branch ${LSystem.current_branch_id}!`);
 					break;
 				case ']':
 					LSystem.current_branch_id--;
+					console.log(`Ended branch ${LSystem.current_branch_id + 1}!`);
 					break;
 				case 'L':
-					// console.log(`Added leaves to branch ${LSystem.current_branch_id}`);
 					l_system_add_component('leaves', LSystem.current_branch_id);
 					break;
 				case 'S':
-					// console.log(`Added stem to branch ${LSystem.current_branch_id}`);
 					l_system_add_component('stem', LSystem.current_branch_id);
 					break;
 				case 'B':
-					// console.log(`Added bud to branch ${LSystem.current_branch_id}`);
 					l_system_add_component('bud', LSystem.current_branch_id);
 					break;
 			}
@@ -283,15 +314,22 @@ async function init() {
 	}
 
 	function l_system_add_component(type, branch_id) {
-		lsystem.addLComponent(type, branch_id);
+		let model = models[type];
+		let _model = model.clone();
+		console.log(`Added ${type} to branch ${LSystem.current_branch_id}`);
+		lsystem.addLComponent(_model, type, branch_id);
 	}
 
 	function l_system_draw() {
 		lsystem.branches.forEach(branch => {
-			l_system_draw_components(branch);
+			carnation.add(branch);
 		});
-		console.log(carnation);
 		scene.add(carnation);
+		console.log(carnation);
+	}
+
+	function l_system_draw_components2(branch) {
+		scene.add(branch)
 	}
 
 	function l_system_draw_components(branch) {
@@ -307,16 +345,16 @@ async function init() {
 		let _model = model.clone();
 		// Tilt first stem in branch
 		if (l_component.branch_id != 0 && i == 1) {
-			stem = _model;
+			_model.position.x = l_component.position.x - l_component.branch.position_displace.x;
+			_model.position.z = l_component.position.z - l_component.branch.position_displace.z;
+			let angle = l_component.branch.theta;
+			_model.rotateX(LSystem.angle);
+			_model.rotateOnWorldAxis(new THREE.Vector3(0, 1, 0), angle);
+			console.log(angle);
+			console.log('Added root stem: ' + `${_model.position.x} ${_model.position.z} ${_model.rotation.y} ${_model.rotation.x}`);
+		} else {
 			_model.position.x = l_component.position.x;
 			_model.position.z = l_component.position.z;
-			let angle = - Math.acos(l_component.branch.position_displace.z);
-			_model.rotateX(LSystem.angle);
-			_model.rotateOnWorldAxis(new THREE.Vector3(0, 1, 0), angle)
-			// _model.rotateZ(angle);
-		} else {
-			_model.position.x = l_component.position.x + l_component.branch.position_displace.x;
-			_model.position.z = l_component.position.z + l_component.branch.position_displace.z;
 		}
 
 		_model.position.y = l_component.position.y;
@@ -331,6 +369,7 @@ function animate() {
     if (models.seed != null) {
         models.seed.rotation.y += .008;
     }
+
 	renderer.render(scene, camera);
 }
 
