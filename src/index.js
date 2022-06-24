@@ -26,6 +26,7 @@ const controls = new OrbitControls(camera, renderer.domElement);
 const loader = new GLTFLoader();
 
 let models = {
+	pot: null,
 	seed: null,
 	leaves: null,
 	stem: null,
@@ -33,6 +34,7 @@ let models = {
 }
 
 let emojis = {
+	pot: '⚱️',
 	seed: '🌰',
 	leaves: '🌿',
 	stem: '🥒',
@@ -70,13 +72,16 @@ async function init() {
 		});
 
 	let gltf = await loader.loadAsync(
+		'src/glb/pot.glb'
+	);
+	models.pot = gltf.scene;
+
+	gltf = await loader.loadAsync(
 		'src/glb/carnation_seed.glb'
 	);
 
 	gltf.scene.position.y = -.3;
-	scene.add(gltf.scene);
 	models.seed = gltf.scene;
-	models.seed.name = 'seed';
 
 	console.log(`🔄${emojis['seed']} : Loaded carnation seed.`);
 	
@@ -288,7 +293,7 @@ async function init() {
 		lsystem.clear();
 		lehmer16.seed = SEED;
 		carnation = new THREE.Group();
-		clearThree(scene)
+		clearThree(scene);
 
 		system.split('').forEach((terminal, n) => {
 			switch (terminal) {
@@ -338,14 +343,17 @@ async function init() {
 			carnation.add(branch);
 		});
 		scene.add(carnation);
+		let pot = models['pot'].clone();
+		pot.position.y = 1.5;
+		scene.add(pot);
 	}
 }
 
 init().then(animate);
 function animate() {
 	requestAnimationFrame(animate);
-    if (models.seed != null) {
-        models.seed.rotation.y += .008;
+    if (carnation != null) {
+        scene.rotateY(.008);
     }
 
 	renderer.render(scene, camera);
