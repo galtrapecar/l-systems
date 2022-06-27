@@ -9,7 +9,10 @@ import { Vector3 } from 'three';
 const PIXEL_RATIO = window.devicePixelRatio;
 
 const SEED = 42057;
-const lehmer16 = new Lehmer16(SEED);
+
+let lehmer16 = {
+	0: new Lehmer16(SEED),
+}
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -41,8 +44,6 @@ let emojis = {
 	stem: '🥒',
 	bud: '🌺',
 }
-
-let stem = null;
 
 let carnation = new THREE.Group();
 carnation.name = 'carnation';
@@ -117,6 +118,7 @@ async function init() {
 
 	class LSystem {
 		constructor(startingPosition, models) {
+			this.order = 0;
 			this.models = models;
 			this.stateStack = [];
 			this.state = {
@@ -126,7 +128,6 @@ async function init() {
 				theta: 0
 			}
 			this.carnation = new THREE.Object3D();
-			this.lehmer16 = new Lehmer16(SEED);
 		}
 
 		cloneState(state) {
@@ -184,9 +185,8 @@ async function init() {
 		}
 
 		calculatePositionDisplace() {
-			console.log('Called position displace');
 			// From the random position on a perimeter of a circle: https://stackoverflow.com/a/50746409
-			let theta = (lehmer16.next() % 11 / 10) * 2 * Math.PI;
+			let theta = (lehmer16[this.order].next() % 11 / 10) * 2 * Math.PI;
 			this.state.theta = theta;
 			let x = (this.state.position.x + 1) * Math.sin(theta);
 			let z = (this.state.position.z + 1) * Math.cos(theta);
@@ -223,7 +223,9 @@ async function init() {
 
 	function l_system_make(system) {
 		lsystem.clear(new Vector3(0, 0, 0));
-		lehmer16.seed = SEED;
+		lehmer16 = {
+			0: new Lehmer16(SEED),
+		};
 		clearThree(scene);
 
 		system.split('').forEach((terminal, n) => {
@@ -234,6 +236,10 @@ async function init() {
 					console.log('\n');
 					console.log(`🪵 : Hit branch!`);
 					console.log('\n');
+					lsystem.order++;
+
+					if (!(lsystem.order in lehmer16)) lehmer16[lsystem.order] = new Lehmer16(SEED);
+
 					lsystem.stateStack.push(lsystem.cloneState(lsystem.state));
 					let position_displace = lsystem.calculatePositionDisplace();
 					lsystem.state.position.add(position_displace);
@@ -242,6 +248,7 @@ async function init() {
 					console.log('\n');
 					console.log(`🪵✖️ : Ended branch!`);
 					console.log('\n');
+					lsystem.order--;
 					lsystem.state = lsystem.cloneState(lsystem.stateStack.pop());
 					break;
 				case 'L':
@@ -260,14 +267,8 @@ async function init() {
 		});
 
 		console.log('\n');
-		((lsystem) => {const log = console.log.bind(window.console, '🌳'); log(lsystem)})();
+		((lsystem) => {const log = console.log.bind(window.console, '🌳'); log(lsystem)})(lsystem.carnation);
 		l_system_draw();
-	}
-
-	function l_system_add_component(type) {
-		let model = models[type];
-		let _model = model.clone();
-		console.log(`➕${emojis[type]} ${'x'} : Added ${type} to branch ${'x'}`);
 	}
 
 	function l_system_draw() {
