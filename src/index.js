@@ -4,6 +4,7 @@ import {OrbitControls} from '/node_modules/three/examples/jsm/controls/OrbitCont
 import {RGBELoader} from '/node_modules/three/examples/jsm/loaders/RGBELoader.js'
 import l_system from './l-system.js';
 import { Lehmer16 } from './l-system.js';
+import { Vector3 } from 'three';
 
 const PIXEL_RATIO = window.devicePixelRatio;
 
@@ -115,171 +116,97 @@ async function init() {
 	let progressions = 0;
 
 	class LSystem {
-		static current_branch_id = 0;
-		// Maps id-s to indicies
-		static branch_indicies = {0: 0};
-		static angle = (45 * Math.PI / 180);
-
-		constructor() {
-			this.branches = {};
-			this.makeInitialBranch();
+		constructor(startingPosition, models) {
+			this.models = models;
+			this.stateStack = [];
+			this.state = {
+				length: 1.4,
+				position: startingPosition ? startingPosition : new THREE.Vector3( 0, 0, 0 ),
+				angle: (45 * Math.PI / 180),
+				theta: 0
+			}
+			this.carnation = new THREE.Object3D();
+			this.lehmer16 = new Lehmer16(SEED);
 		}
 
-		clear() {
-			this.branches = [];
-			this.makeInitialBranch();
+		cloneState(state) {
+			return {
+				length: 1.4,
+				position:  new THREE.Vector3().copy(state.position),
+				angle: (45 * Math.PI / 180),
+				theta: state.theta
+			}
 		}
 
-		makeBranch(params) {
-			if (params.branch_id in this.branches) this.branch_indicies[params.branch_id]++;
-			let branch = new LBranch({
-				id: params.branch_id,
-				root: this.branches[params.branch_id - 1].getLatest(),
-			});
-			this.branches[params.branch_id] = branch;
+		addLeaves() {
+			let model = this.models['leaves'];
+			let _model = model.clone();
+			let position = new Vector3(0, this.state.length, 0);
+
+			if (this.stateStack.length != 0) {
+				if (this.state.position.y == this.stateStack[this.stateStack.length - 1].position.y) {
+					position = new Vector3(0, Math.asin(this.state.angle) + .1, 0);
+				}
+			}
+			
+			this.state.position.add(position);
+
+			_model.position.copy(this.state.position);
+			this.carnation.add(_model);
 		}
 
-		makeInitialBranch() {
-			let branch = new LBranch({
-				id: 0,
-				root: new LComponent({
-					type: 'root',
-					branch_id: 0,
-					branch: null,
-					position: {x: 0, y: 0, z: 0},
-					root: {position: {x: 0, y: 0, z: 0}}
-				}),
-			});
-			branch.root.branch = branch;
-			this.branches['0'] = branch;
+		addStem() {
+			let model = this.models['stem'];
+			let _model = model.clone();
+
+			_model.position.copy(this.state.position);
+
+			if (this.stateStack.length != 0) {
+				let x = (this.stateStack[this.stateStack.length - 1].position.x + 1) * Math.sin(this.state.theta);
+				let z = (this.stateStack[this.stateStack.length - 1].position.z + 1) * Math.cos(this.state.theta);
+				if (this.state.position.y == this.stateStack[this.stateStack.length - 1].position.y) {
+					_model.position.x -= x;
+					_model.position.z -= z;
+					_model.rotateX(this.state.angle);
+					_model.rotateOnWorldAxis(new THREE.Vector3(0, 1, 0), this.state.theta);
+				}
+			}
+
+			this.carnation.add(_model);
 		}
 
-		addLComponent(model, type, branch_id) {
-			let branch = this.branches[branch_id];
+		addBud() {
+			let model = this.models['bud'];
+			let _model = model.clone();
 
-			// TODO: remove makeBranch because it is created on [ call
-			// if (branch === undefined) {
-			// 	this.makeBranch({
-			// 		id: branch_id,
-			// 		root: this.branches[branch_id - 1].getLatest()
-			// 	})
-			// }
-			branch = this.branches[branch_id];
-			branch.addLComponent({
-				model: model,
-				type: type,
-				branch_id: branch_id,
-			});
-		}
-	}
-
-	class LBranch extends THREE.Group {
-
-		constructor(params) {
-			super();
-			this.ID = params.id;
-			this.INDEX = params.index;
-			this.root = params.root;
-			this.theta = 0;
-			this.setPosition(params);
-			this.position_displace = this.calculatePositionDisplace();
-			this.addPositionDisplaceToPosition();
-		}
-
-		getLatest() {
-			if (this.children.length == 0) return {position: {x: 0, y: 0, z: 0}};
-			return this.children[this.children.length - 1];
-		}
-
-		setPosition(params) {
-			let x = params.root.position.x;
-			let z = params.root.position.z;
-			let y = params.root.position.y;
-
-			this.position.set(x, y, z);
+			_model.position.copy(this.state.position);
+			this.carnation.add(_model);
 		}
 
 		calculatePositionDisplace() {
-			if (this.ID === 0) return {x: 0, z: 0};
-			// Random position on a perimeter of a circle: https://stackoverflow.com/a/50746409
-			const R = 1;
-			this.theta = (lehmer16.next() % 11 / 10) * 2 * Math.PI;
-			let x = (this.position.x + 1) * Math.sin(this.theta);
-			let z = (this.position.z + 1) * Math.cos(this.theta);
-			return {x: x, z: z};
-		}
-
-		addPositionDisplaceToPosition() {
-			let x = this.position.x + this.position_displace.x;
-			let z = this.position.z + this.position_displace.z;
-			let y = this.position.y;
-
-			this.position.set(x, y, z);
-		}
-
-		addLComponent(params) {
-			let l_component = new LComponent({
-				type: params.type,
-				branch_id: params.branch_id,
-				branch: this,
-				model: params.model,
-				root: this.root,
-				first_stem: params.first_stem,
-			});
-			this.add(l_component);
-		}
-	}
-
-	class LComponent extends THREE.Group {
-
-		constructor(params) {
-			super();
-			this.type = params.type;
-			this.model = params.model;
-			this.branch_id = params.branch_id;
-			this.branch = params.branch;
-			this.setPosition(params);
-			this.setModel(params.model);
-		}
-
-		setModel(model) {
-			if (model) {
-				if (this.branch_id != 0 && this.position.y == 0) {
-					model.position.x = this.position.x - this.branch.position_displace.x;
-					model.position.z = this.position.z - this.branch.position_displace.z;
-					let angle = this.branch.theta;
-					model.rotateX(LSystem.angle);
-					model.rotateOnWorldAxis(new THREE.Vector3(0, 1, 0), angle);
-				} else {
-					model.position.x = this.position.x;
-					model.position.z = this.position.z;
-				}
-				this.add(model);
-			}
-				
-		}
-
-		setPosition(params) {
-			let x = 0;
-			let z = 0;
+			console.log('Called position displace');
+			// From the random position on a perimeter of a circle: https://stackoverflow.com/a/50746409
+			let theta = (lehmer16.next() % 11 / 10) * 2 * Math.PI;
+			this.state.theta = theta;
+			let x = (this.state.position.x + 1) * Math.sin(theta);
+			let z = (this.state.position.z + 1) * Math.cos(theta);
 			let y = 0;
+			return new Vector3(x, y, z);
+		}
 
-			if (params.branch) {
-				y = params.branch.getLatest().position.y;
-				if (params.type == 'leaves') {
-					if (params.branch_id != 0 && params.branch.children.length == 1) {
-						y += Math.asin(LSystem.angle) + .1;
-					} else {
-						y += 1.4;
-					}
-				}
+		clear(startingPosition) {
+			this.stateStack = [];
+			this.state = {
+				length: 1.4,
+				position: startingPosition ? startingPosition : new THREE.Vector3( 0, 0, 0 ),
+				angle: (45 * Math.PI / 180),
+				theta: 0
 			}
-
-			this.position.set(x, y, z);
+			this.carnation = new THREE.Object3D();
 		}
 	}
 
-	const lsystem = new LSystem();
+	const lsystem = new LSystem(new Vector3(0, 0, 0), models);
 
 	console.log('\n');
 	console.log(`💬 : ${l_system(0)}`);
@@ -295,65 +222,56 @@ async function init() {
 	})
 
 	function l_system_make(system) {
-		lsystem.clear();
+		lsystem.clear(new Vector3(0, 0, 0));
 		lehmer16.seed = SEED;
-		carnation = new THREE.Group();
 		clearThree(scene);
 
 		system.split('').forEach((terminal, n) => {
 			switch (terminal) {
-				case '-':
-					LSystem.current_branch_id++;
-					break;
 				case '+':
-					LSystem.current_branch_id++;
 					break;
 				case '[':
 					console.log('\n');
-					console.log(`🪵 : Hit branch ${LSystem.current_branch_id}!`);
+					console.log(`🪵 : Hit branch!`);
 					console.log('\n');
-
-					// TODO: Make branch
-					// 
-					lsystem.makeBranch({
-						branch_id: LSystem.current_branch_id,
-					});
+					lsystem.stateStack.push(lsystem.cloneState(lsystem.state));
+					let position_displace = lsystem.calculatePositionDisplace();
+					lsystem.state.position.add(position_displace);
 					break;
 				case ']':
-					LSystem.current_branch_id--;
 					console.log('\n');
-					console.log(`🪵✖️ : Ended branch ${LSystem.current_branch_id + 1}!`);
+					console.log(`🪵✖️ : Ended branch!`);
 					console.log('\n');
+					lsystem.state = lsystem.cloneState(lsystem.stateStack.pop());
 					break;
 				case 'L':
-					l_system_add_component('leaves', LSystem.current_branch_id);
+					lsystem.addLeaves();
+					console.log(`➕${emojis['leaves']} ${'x'} : Added ${'leaves'} to branch ${'x'}`);
 					break;
 				case 'S':
-					l_system_add_component('stem', LSystem.current_branch_id);
+					lsystem.addStem();
+					console.log(`➕${emojis['stem']} ${'x'} : Added ${'stem'} to branch ${'x'}`);
 					break;
 				case 'B':
-					l_system_add_component('bud', LSystem.current_branch_id);
+					lsystem.addBud();
+					console.log(`➕${emojis['bud']} ${'x'} : Added ${'bud'} to branch ${'x'}`);
 					break;
 			}
 		});
 
 		console.log('\n');
-		((lsystem) => {const log = console.log.bind(window.console, '🌳'); log(lsystem)})(lsystem);
+		((lsystem) => {const log = console.log.bind(window.console, '🌳'); log(lsystem)})();
 		l_system_draw();
 	}
 
-	function l_system_add_component(type, branch_id) {
+	function l_system_add_component(type) {
 		let model = models[type];
 		let _model = model.clone();
-		console.log(`➕${emojis[type]} ${LSystem.current_branch_id} : Added ${type} to branch ${LSystem.current_branch_id}`);
-		lsystem.addLComponent(_model, type, branch_id);
+		console.log(`➕${emojis[type]} ${'x'} : Added ${type} to branch ${'x'}`);
 	}
 
 	function l_system_draw() {
-		lsystem.branches.forEach(branch => {
-			carnation.add(branch);
-		});
-		scene.add(carnation);
+		scene.add(lsystem.carnation);
 		let pot = models['pot'].clone();
 		pot.position.y = 1.5;
 		scene.add(pot);
@@ -361,6 +279,7 @@ async function init() {
 }
 
 init().then(animate);
+
 function animate() {
 	requestAnimationFrame(animate);
     if (carnation != null) {
