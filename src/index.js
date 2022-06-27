@@ -116,11 +116,12 @@ async function init() {
 
 	class LSystem {
 		static current_branch_id = 0;
+		// Maps id-s to indicies
+		static branch_indicies = {0: 0};
 		static angle = (45 * Math.PI / 180);
 
 		constructor() {
-			this.branches = [];
-
+			this.branches = {};
 			this.makeInitialBranch();
 		}
 
@@ -130,11 +131,12 @@ async function init() {
 		}
 
 		makeBranch(params) {
+			if (params.branch_id in this.branches) this.branch_indicies[params.branch_id]++;
 			let branch = new LBranch({
 				id: params.branch_id,
-				root: params.root,
+				root: this.branches[params.branch_id - 1].getLatest(),
 			});
-			this.branches.push(branch);
+			this.branches[params.branch_id] = branch;
 		}
 
 		makeInitialBranch() {
@@ -149,17 +151,19 @@ async function init() {
 				}),
 			});
 			branch.root.branch = branch;
-			this.branches.push(branch);
+			this.branches['0'] = branch;
 		}
 
 		addLComponent(model, type, branch_id) {
 			let branch = this.branches[branch_id];
-			if (branch === undefined) {
-				this.makeBranch({
-					id: branch_id,
-					root: this.branches[branch_id - 1].getLatest()
-				})
-			}
+
+			// TODO: remove makeBranch because it is created on [ call
+			// if (branch === undefined) {
+			// 	this.makeBranch({
+			// 		id: branch_id,
+			// 		root: this.branches[branch_id - 1].getLatest()
+			// 	})
+			// }
 			branch = this.branches[branch_id];
 			branch.addLComponent({
 				model: model,
@@ -174,6 +178,7 @@ async function init() {
 		constructor(params) {
 			super();
 			this.ID = params.id;
+			this.INDEX = params.index;
 			this.root = params.root;
 			this.theta = 0;
 			this.setPosition(params);
@@ -307,6 +312,12 @@ async function init() {
 					console.log('\n');
 					console.log(`🪵 : Hit branch ${LSystem.current_branch_id}!`);
 					console.log('\n');
+
+					// TODO: Make branch
+					// 
+					lsystem.makeBranch({
+						branch_id: LSystem.current_branch_id,
+					});
 					break;
 				case ']':
 					LSystem.current_branch_id--;

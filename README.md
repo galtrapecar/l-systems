@@ -27,6 +27,7 @@ npx webpack
 - Lehmer RNG: https://en.wikipedia.org/wiki/Lehmer_random_number_generator
 - Video about procedual generation using Lehmer32 by javidx9 (16:00):
   - https://www.youtube.com/watch?v=ZZY9YE7rZJw
+- http://algorithmicbotany.org/papers/abop/abop-ch1.pdf
 
 # Notes
 
