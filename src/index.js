@@ -9,23 +9,31 @@ import { Vector3 } from 'three';
 
 const PIXEL_RATIO = window.devicePixelRatio;
 
+// const SEED = Math.round(Math.random() * 10000);
+let SEED = 7994;
+
 const seed_in = document.querySelector('#seed_in');
+	  seed_in.value = SEED;
+const seedslider_in = document.querySelector('#seedslider_in');
+const seedslider_out = document.querySelector('#seedslider_out');
 const progression_in = document.querySelector('#progression_in');
 	  progression_in.value = 0;
 const progression_out = document.querySelector('#progression_out');
 const autoplay_in = document.querySelector('#autoplay_in');
-
-// const SEED = Math.round(Math.random() * 10000);
-let SEED = 7994;
-seed_in.value = SEED;
 
 console.log(`\n🌰 : seed is ${SEED}\n\n`);
 
 seed_in.addEventListener('input', () => {
 	SEED = seed_in.value;
 	console.log(`\n🔄🌰 : New seed is ${SEED}\n\n`);
-	progression_in.value = 0;
-	progression_out.innerText = 0;
+	clearThree(scene);
+	init();
+});
+
+seedslider_in.addEventListener('input', () => {
+	SEED = seedslider_in.value;
+	seed_in.value = SEED;
+	console.log(`\n🔄🌰 : New seed is ${SEED}\n\n`);
 	clearThree(scene);
 	init();
 });
@@ -130,16 +138,16 @@ async function init() {
 
 	// Make Carnation from L-System
 
-	let progressions = 0;
+	let progressions = progression_in.value;
 	
 	let L_System = new LSystem(Carnation.axiom, Carnation.rules, SEED);
 
 	let plant = null;
 
 	console.log('\n');
-	console.log(`💬 : ${L_System.make(0)}`);
+	console.log(`💬 : ${L_System.make(progressions)}`);
 	console.log('\n');
-	l_system_make(L_System.make(0));
+	l_system_make(L_System.make(progressions));
 
 	let autoplay_interval = setInterval(() => {
 		if (!autoplay_in.checked) return;

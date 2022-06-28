@@ -25,6 +25,10 @@ html {
     gap: 20px;
 }
 
+.GUI .inputs.second {
+    margin-top: 70px;
+}
+
 .GUI .inputs > div {
     display: grid;
     grid-template-columns: 1fr 1fr;
