@@ -9,13 +9,26 @@ import { Vector3 } from 'three';
 
 const PIXEL_RATIO = window.devicePixelRatio;
 
+const seed_in = document.querySelector('#seed_in');
+const progression_in = document.querySelector('#progression_in');
+	  progression_in.value = 0;
+const progression_out = document.querySelector('#progression_out');
+const autoplay_in = document.querySelector('#autoplay_in');
+
 // const SEED = Math.round(Math.random() * 10000);
-const SEED = 6175;
+let SEED = 7994;
+seed_in.value = SEED;
+
 console.log(`\n🌰 : seed is ${SEED}\n\n`);
 
-let lehmer16 = {
-	0: new Lehmer16(SEED),
-}
+seed_in.addEventListener('input', () => {
+	SEED = seed_in.value;
+	console.log(`\n🔄🌰 : New seed is ${SEED}\n\n`);
+	progression_in.value = 0;
+	progression_out.innerText = 0;
+	clearThree(scene);
+	init();
+});
   
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -128,13 +141,31 @@ async function init() {
 	console.log('\n');
 	l_system_make(L_System.make(0));
 
-	document.addEventListener('keypress', () => {
+	let autoplay_interval = setInterval(() => {
+		if (!autoplay_in.checked) return;
+		if (progressions == progression_in.getAttribute('max')) return;
 		progressions++;
-		console.log('\n');
-		console.log(`💬 : ${L_System.make(progressions)}`);
-		console.log('\n');
+		progression_in.value = progressions;
+		progression_out.innerText = progressions;
+		console.log(`\n💬 : ${L_System.make(progressions)}\n\n`);
 		l_system_make(L_System.make(progressions));
-	})
+	}, 3000);
+
+	document.addEventListener('keypress', () => {
+		if (progressions == progression_in.getAttribute('max')) return;
+		progressions++;
+		progression_in.value = progressions;
+		progression_out.innerText = progressions;
+		console.log(`\n💬 : ${L_System.make(progressions)}\n\n`);
+		l_system_make(L_System.make(progressions));
+	});
+
+	progression_in.addEventListener('input', () => {
+		progressions = progression_in.value;
+		progression_out.innerText = progressions;
+		console.log(`\n💬 : ${L_System.make(progressions)}\n\n`);
+		l_system_make(L_System.make(progressions));
+	});
 
 	function l_system_make(system) {
 		plant = new Carnation(system, new Vector3(0, 0, 0), models, SEED);

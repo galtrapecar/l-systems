@@ -6,10 +6,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>L-Systems using Three.js</title>
 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap" rel="stylesheet"> 
+
     <link rel="stylesheet" href="./dist/style.css">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌎</text></svg>">
 </head>
 <body>
+
+    <div class="GUI">
+        <div class="inputs">
+            <div class="seed">Seed: <input id="seed_in" type="text"></div>
+            <div class="progressions">Progressions: <input id="progression_in" type="range" min="0" max="6"></div>
+            <div class="progression">Progression: <div id="progression_out">0</div></div>
+            <div class="autoplay">Autoplay: <input type="checkbox" id="autoplay_in"></div>
+        </div>
+    </div>
     
 <script src="./dist/main.js"></script>
 </body>

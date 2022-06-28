@@ -1,4 +1,3 @@
-import * as THREE from 'three';
 import { Object3D } from 'three';
 import { Vector3 } from 'three';
 import { Lehmer16 } from './Lehmer16.js';
@@ -115,20 +114,6 @@ export class Carnation {
 
 					this.stateStack.push(this.cloneState(this.state));
 					this.state.position.add(this.calculatePositionDisplace());
-                    var radius   = 1,
-                        segments = 64,
-                        material = new THREE.LineBasicMaterial( { color: 0x0000ff } ),
-                        geometry = new THREE.CircleGeometry( radius, segments );
-
-                    // Remove center vertex
-
-                    let line = new THREE.Line( geometry, material );
-                    line.rotateX(90 * Math.PI / 180);
-                    line.position.copy(this.state.position);
-                    line.position.y = 1.5;
-
-                    // Non closed circle with one open segment:
-                    this.carnation.add( line );
 					break;
 				case ']':
 					console.log(`\n🪵✖️ : Ended branch!\n\n`);
