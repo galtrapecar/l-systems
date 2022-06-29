@@ -7,6 +7,11 @@
     font-style: italic;
 }
 
+@font-face {
+    font-family: 'RMTypewriter';
+    src: url('./fonts/rm_typerighter_old.ttf');
+}
+
 html {
     overflow: hidden;
 }
