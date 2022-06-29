@@ -21,7 +21,7 @@ npx webpack
 - HDR background for three.js demo by Poly Haven: https://polyhaven.com/a/fouriesburg_mountain_cloudy
 - Code for clearing three.js scene by: https://newbedev.com/how-do-i-clear-three-js-scene
 - Generating random points on a circle by aioobe: https://stackoverflow.com/a/50746409
-- RM Typewriter old font by Ray Meadows: http://fontstruct.fontshop.com/fontstructions/show/263156
+- RM Typewriter font by Ray Meadows: http://fontstruct.fontshop.com/fontstructions/show/263156
 
 # Papers, literature, references
 

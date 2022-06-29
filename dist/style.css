@@ -2,14 +2,14 @@
     box-sizing: border-box;
     margin: 0;
     padding: 0;
-    font-family: 'Roboto', sans-serif;
+    font-family: 'RMTypewriter';
     font-weight: 500;
     font-style: italic;
 }
 
 @font-face {
     font-family: 'RMTypewriter';
-    src: url('./fonts/rm_typerighter_old.ttf');
+    src: url('./fonts/rm_typerighter_medium.ttf');
 }
 
 html {
