@@ -2,14 +2,14 @@
     box-sizing: border-box;
     margin: 0;
     padding: 0;
-    font-family: 'RMTypewriter';
+    font-family: 'RMTyperighter';
     font-weight: 500;
-    font-style: italic;
+    font-size: 1.5rem;
 }
 
 @font-face {
-    font-family: 'RMTypewriter';
-    src: url('./fonts/rm_typerighter_medium.ttf');
+    font-family: 'RMTyperighter';
+    src: url('./fonts/RM-Typerighter-old.woff');
 }
 
 html {
