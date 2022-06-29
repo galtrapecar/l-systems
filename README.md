@@ -1,6 +1,6 @@
 # l-systems
 
-Attepmt in procedual generation using l-systems and three.js
+Attempt at procedual generation using l-systems and three.js
 
 # Before running:
 
