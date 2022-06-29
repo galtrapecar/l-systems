@@ -3,8 +3,7 @@
     margin: 0;
     padding: 0;
     font-family: 'RMTyperighter';
-    font-weight: 500;
-    font-size: 1.5rem;
+    font-weight: 600;
 }
 
 @font-face {
@@ -20,6 +19,7 @@ html {
     position: fixed;
     right: 30px;
     top: 30px;
+    font-size: 1.1rem;
 }
 
 .GUI .inputs {
@@ -37,6 +37,7 @@ html {
 .GUI .inputs > div {
     display: grid;
     grid-template-columns: 1fr 1fr;
+    column-gap: 20px;
 }
 
 .GUI .inputs > div > div {
