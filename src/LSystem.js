@@ -31,14 +31,14 @@ export class LSystem {
 
     progress(system) {
         let _system = '';
-        system.split('').forEach((terminal) => {
-            if (this.rules[terminal]) {
-                let odds = this.lehmer16.next() % this.rules[terminal]['odds'].length;
-                let index = this.rules[terminal]['odds'][odds];
-                let rule = this.rules[terminal]['rules'][index];
+        system.split('').forEach((input) => {
+            if (this.rules[input]) {
+                let odds = this.lehmer16.next() % this.rules[input]['odds'].length;
+                let index = this.rules[input]['odds'][odds];
+                let rule = this.rules[input]['rules'][index];
                 _system += rule;
             } else {
-                _system += terminal;
+                _system += input;
             }
         })
         return _system;
