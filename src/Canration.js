@@ -9,12 +9,18 @@ import { Lehmer16 } from './Lehmer16.js';
 // 4481
 
 export class Carnation {
+    static IAAdependent = false;
     static axiom = 'RMLB';
 
-    static rules = {
-        M: {
-            rules: ['LSM', 'L[SMLB]SM'],
-            odds: [0, 0, 0, 0, 0, 0, 0, 0, 1, 1], // 0.8 -> 1st rule ; 0.2 -> 2nd rule
+    static rules(input) {
+        switch (input) {
+            case 'M':
+                return {
+                    rules: ['LSM', 'L[SMLB]SM'],
+                    odds: [0, 0, 0, 0, 0, 0, 0, 0, 1, 1], // 0.8 -> 1st rule ; 0.2 -> 2nd rule
+                }
+            default:
+                break;
         }
     }
 
@@ -106,32 +112,32 @@ export class Carnation {
 
     make(system) {
         system.split('').forEach((input) => {
-			switch (input) {
-				case '[':
-					console.log(`\n🪵 : Hit branch!\n\n`);
-					this.order++;
+            switch (input) {
+                case '[':
+                    console.log(`\n🪵 : Hit branch!\n\n`);
+                    this.order++;
 
-					this.stateStack.push(this.cloneState(this.state));
-					this.state.position.add(this.calculatePositionDisplace());
-					break;
-				case ']':
-					console.log(`\n🪵✖️ : Ended branch!\n\n`);
-					this.order--;
-					this.state = this.cloneState(this.stateStack.pop());
-					break;
-				case 'L':
-					this.addLeaves();
-					console.log(`➕${Carnation.emojis['leaves']} ${'x'} : Added ${'leaves'} to branch ${'x'}`);
-					break;
-				case 'S':
-					this.addStem();
-					console.log(`➕${Carnation.emojis['stem']} ${'x'} : Added ${'stem'} to branch ${'x'}`);
-					break;
-				case 'B':
-					this.addBud();
-					console.log(`➕${Carnation.emojis['bud']} ${'x'} : Added ${'bud'} to branch ${'x'}`);
-					break;
-			}
-		});
+                    this.stateStack.push(this.cloneState(this.state));
+                    this.state.position.add(this.calculatePositionDisplace());
+                    break;
+                case ']':
+                    console.log(`\n🪵✖️ : Ended branch!\n\n`);
+                    this.order--;
+                    this.state = this.cloneState(this.stateStack.pop());
+                    break;
+                case 'L':
+                    this.addLeaves();
+                    console.log(`➕${Carnation.emojis['leaves']} ${'x'} : Added ${'leaves'} to branch ${'x'}`);
+                    break;
+                case 'S':
+                    this.addStem();
+                    console.log(`➕${Carnation.emojis['stem']} ${'x'} : Added ${'stem'} to branch ${'x'}`);
+                    break;
+                case 'B':
+                    this.addBud();
+                    console.log(`➕${Carnation.emojis['bud']} ${'x'} : Added ${'bud'} to branch ${'x'}`);
+                    break;
+            }
+        });
     }
 }

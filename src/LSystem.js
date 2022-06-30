@@ -1,23 +1,13 @@
 import { Lehmer16 } from "./Lehmer16";
-// Currently working for branching strand of garden carnation
-// R - root ; 
-// S - stem ; 
-// M - meristem ; 
-// B - bud ; 
-// L - leaves ;
-// [ - start branch ;
-// ] - end branch ;
-
-
-// const SEED = Math.random() * 42069;
-const SEED = 42022;
 
 export class LSystem {
-    constructor(axiom, rules, seed) {
+    constructor(axiom, rules, seed, IAAdependent) {
         this.axiom = axiom;
         this.rules = rules;
         this.seed = seed;
         this.lehmer16 = new Lehmer16(seed);
+        this.IAAdependent = IAAdependent ? IAAdependent : false;
+        this.IAA = 0;
     }
 
     make(progressions) {
@@ -30,6 +20,32 @@ export class LSystem {
     }
 
     progress(system) {
+        let _system = '';
+        system.split('').forEach((input) => {
+            if (this.IAAdependent) {
+                if (this.rules(IAA, input)) {
+                    let odds = this.lehmer16.next() % this.rules(IAA, input)['odds'].length;
+                    let index = this.rules(IAA, input)['odds'][odds];
+                    let rule = this.rules(IAA, input)['rules'][index];
+                    _system += rule;
+                } else {
+                    _system += input;
+                }
+            } else {
+                if (this.rules(input)) {
+                    let odds = this.lehmer16.next() % this.rules(input)['odds'].length;
+                    let index = this.rules(input)['odds'][odds];
+                    let rule = this.rules(input)['rules'][index];
+                    _system += rule;
+                } else {
+                    _system += input;
+                }
+            }
+        })
+        return _system;
+    }
+
+    _progress(system) {
         let _system = '';
         system.split('').forEach((input) => {
             if (this.rules[input]) {
