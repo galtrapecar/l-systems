@@ -1,12 +1,13 @@
 import { Lehmer16 } from "./Lehmer16";
 
 export class LSystem {
-    constructor(axiom, rules, seed, IAAdependent) {
+    constructor(axiom, rules, seed, IAAdependent, IAAdelta) {
         this.axiom = axiom;
         this.rules = rules;
         this.seed = seed;
         this.lehmer16 = new Lehmer16(seed);
         this.IAAdependent = IAAdependent ? IAAdependent : false;
+        this.IAAdelta = IAAdelta ? IAAdelta : 0;
         this.IAA = 0;
     }
 
@@ -15,6 +16,7 @@ export class LSystem {
         let system = this.axiom;
         for (let i = 0; i < progressions; i++) {
             system = this.progress(system);
+            this.IAA += this.IAAdelta;
         }
         return system;
     }
@@ -23,7 +25,7 @@ export class LSystem {
         let _system = '';
         system.split('').forEach((input) => {
             if (this.IAAdependent) {
-                if (this.rules(IAA, input)) {
+                if (this.rules(this.IAA, input)) {
                     let odds = this.lehmer16.next() % this.rules(IAA, input)['odds'].length;
                     let index = this.rules(IAA, input)['odds'][odds];
                     let rule = this.rules(IAA, input)['rules'][index];

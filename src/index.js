@@ -140,7 +140,7 @@ async function init() {
 
 	let progressions = progression_in.value;
 	
-	let L_System = new LSystem(Carnation.axiom, Carnation.rules, SEED, Carnation.IAAdependent);
+	let L_System = new LSystem(Carnation.axiom, Carnation.rules, SEED);
 
 	let plant = null;
 

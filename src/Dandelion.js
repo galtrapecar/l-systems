@@ -5,9 +5,9 @@ import { Lehmer16 } from './Lehmer16.js';
 // Notable seeds :
 
 export class Dandelion {
+    static IAAdependent = true;
     static axiom = 'RMLB';
 
-    static IAA = 0;
     static rules(IAA, input) {
         switch (input) {
             case 'M':
