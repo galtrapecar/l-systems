@@ -63,6 +63,7 @@ export class LSystem {
     }
 
     clear() {
+        this.IAA = 0;
         this.lehmer16 = new Lehmer16(this.seed);
     }
 }

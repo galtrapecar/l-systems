@@ -12,7 +12,7 @@ export class Dandelion {
     static rules(IAA, input) {
         switch (input) {
             case 'M':
-                if (IAA < 70) {
+                if (IAA < 50) {
                     return {
                         rules: ['LM', 'LLM', 'LLLM'],
                         odds: [0, 1, 1, 1, 1, 1, 1, 1, 2, 2], // 10% / 70% / 20%

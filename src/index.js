@@ -189,7 +189,7 @@ async function init() {
 	function l_system_draw() {
 		scene.add(plant.model);
 		let pot = models['pot'].clone();
-		pot.position.y = 1.5;
+		// pot.position.y = 1.5;
 		scene.add(pot);
 	}
 }

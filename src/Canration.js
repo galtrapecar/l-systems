@@ -127,15 +127,15 @@ export class Carnation {
                     break;
                 case 'L':
                     this.addLeaves();
-                    console.log(`➕${Carnation.emojis['leaves']} ${'x'} : Added ${'leaves'} to branch ${'x'}`);
+                    console.log(`➕${Carnation.emojis['leaves']} ${'x'} : Added ${'leaves'}`);
                     break;
                 case 'S':
                     this.addStem();
-                    console.log(`➕${Carnation.emojis['stem']} ${'x'} : Added ${'stem'} to branch ${'x'}`);
+                    console.log(`➕${Carnation.emojis['stem']} ${'x'} : Added ${'stem'}`);
                     break;
                 case 'B':
                     this.addBud();
-                    console.log(`➕${Carnation.emojis['bud']} ${'x'} : Added ${'bud'} to branch ${'x'}`);
+                    console.log(`➕${Carnation.emojis['bud']} ${'x'} : Added ${'bud'}`);
                     break;
             }
         });
