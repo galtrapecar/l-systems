@@ -6,7 +6,8 @@ import { Lehmer16 } from './Lehmer16.js';
 
 export class Dandelion {
     static IAAdependent = true;
-    static axiom = 'RMLB';
+    static IAAdelta = 10;
+    static axiom = 'RMB';
 
     static rules(IAA, input) {
         switch (input) {
@@ -51,11 +52,13 @@ export class Dandelion {
         seed: '🌰',
         leaves: '🌿',
         stem: '🥒',
+        meristem: '🥦',
         bud: '☀️',
+        dandelion: '🕸'
     }
 
     constructor(system, startingPosition, models, seed) {
-        this.dandelion = new Object3D();
+        this.model = new Object3D();
         this.lehmer16 = new Lehmer16(seed);
         this.system = system;
         this.models = models;
@@ -81,18 +84,11 @@ export class Dandelion {
     addLeaves() {
         let model = this.models['leaves'];
         let _model = model.clone();
-        let position = new Vector3(0, this.state.length, 0);
 
-        if (this.stateStack.length != 0) {
-            if (this.state.position.y == this.stateStack[this.stateStack.length - 1].position.y) {
-                position = new Vector3(0, Math.asin(this.state.angle) + .1, 0);
-            }
-        }
-
-        this.state.position.add(position);
+        _model.rotateOnWorldAxis(new Vector3(0, 1, 0), (Math.random() * 2 * Math.PI));
 
         _model.position.copy(this.state.position);
-        this.dandelion.add(_model);
+        this.model.add(_model);
     }
 
     addStem() {
@@ -112,7 +108,11 @@ export class Dandelion {
             }
         }
 
-        this.dandelion.add(_model);
+        this.model.add(_model);
+    }
+
+    addMeristem() {
+        
     }
 
     addBud() {
@@ -120,7 +120,7 @@ export class Dandelion {
         let _model = model.clone();
 
         _model.position.copy(this.state.position);
-        this.dandelion.add(_model);
+        this.model.add(_model);
     }
 
     calculatePositionDisplace() {
@@ -150,15 +150,15 @@ export class Dandelion {
                     break;
                 case 'L':
                     this.addLeaves();
-                    console.log(`➕${Carnation.emojis['leaves']} ${'x'} : Added ${'leaves'} to branch ${'x'}`);
+                    console.log(`➕${Dandelion.emojis['leaves']} ${'x'} : Added ${'leaves'} to branch ${'x'}`);
                     break;
                 case 'S':
                     this.addStem();
-                    console.log(`➕${Carnation.emojis['stem']} ${'x'} : Added ${'stem'} to branch ${'x'}`);
+                    console.log(`➕${Dandelion.emojis['stem']} ${'x'} : Added ${'stem'} to branch ${'x'}`);
                     break;
                 case 'B':
                     this.addBud();
-                    console.log(`➕${Carnation.emojis['bud']} ${'x'} : Added ${'bud'} to branch ${'x'}`);
+                    console.log(`➕${Dandelion.emojis['bud']} ${'x'} : Added ${'bud'} to branch ${'x'}`);
                     break;
             }
         });

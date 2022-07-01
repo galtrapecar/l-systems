@@ -26,9 +26,9 @@ export class LSystem {
         system.split('').forEach((input) => {
             if (this.IAAdependent) {
                 if (this.rules(this.IAA, input)) {
-                    let odds = this.lehmer16.next() % this.rules(IAA, input)['odds'].length;
-                    let index = this.rules(IAA, input)['odds'][odds];
-                    let rule = this.rules(IAA, input)['rules'][index];
+                    let odds = this.lehmer16.next() % this.rules(this.IAA, input)['odds'].length;
+                    let index = this.rules(this.IAA, input)['odds'][odds];
+                    let rule = this.rules(this.IAA, input)['rules'][index];
                     _system += rule;
                 } else {
                     _system += input;

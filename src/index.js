@@ -6,6 +6,7 @@ import { LSystem } from './LSystem.js';
 import { Lehmer16 } from './Lehmer16.js';
 import { Carnation } from './Canration.js';
 import { Vector3 } from 'three';
+import { Dandelion } from './Dandelion.js';
 
 const PIXEL_RATIO = window.devicePixelRatio;
 
@@ -69,8 +70,7 @@ let emojis = {
 	bud: '🌺',
 }
 
-let carnation = new THREE.Group();
-	carnation.name = 'carnation';
+let plant_model = new THREE.Group();
 
 const light = new THREE.DirectionalLight(0xffffff, .5);
 light.position.set(-10, -10, 10);
@@ -112,7 +112,7 @@ async function init() {
 	console.log(`🔄${emojis['seed']} : Loaded carnation seed.`);
 	
 	gltf = await loader.loadAsync(
-		'src/glb/carnation_leaves.glb'
+		'src/glb/dandelion_leaf.glb'
 	);
 
 	models.leaves = gltf.scene;
@@ -120,7 +120,7 @@ async function init() {
 	console.log(`🔄${emojis['leaves']} : Loaded carnation leaves.`);
 	
 	gltf = await loader.loadAsync(
-		'src/glb/carnation_stem.glb'
+		'src/glb/dandelion_stem.glb'
 	);
 
 	models.stem = gltf.scene;
@@ -128,7 +128,7 @@ async function init() {
 	console.log(`🔄${emojis['stem']} : Loaded carnation stem.`);
 
 	gltf = await loader.loadAsync(
-		'src/glb/carnation_bud.glb'
+		'src/glb/dandelion_bud.glb'
 	);
 
 	models.bud = gltf.scene;
@@ -136,11 +136,11 @@ async function init() {
 	console.log(`🔄${emojis['bud']} : Loaded carnation bud.`);
 
 
-	// Make Carnation from L-System
+	// Make L-System
 
 	let progressions = progression_in.value;
 	
-	let L_System = new LSystem(Carnation.axiom, Carnation.rules, SEED);
+	let L_System = new LSystem(Dandelion.axiom, Dandelion.rules, SEED, Dandelion.IAAdependent, Dandelion.IAAdelta);
 
 	let plant = null;
 
@@ -176,18 +176,18 @@ async function init() {
 	});
 
 	function l_system_make(system) {
-		plant = new Carnation(system, new Vector3(0, 0, 0), models, SEED);
+		plant = new Dandelion(system, new Vector3(0, 0, 0), models, SEED);
 		clearThree(scene);
 
 		plant.make(system);
 
 		console.log('\n');
-		((plant) => {const log = console.log.bind(window.console, '🌳'); log(plant)})(plant.carnation);
+		((plant) => {const log = console.log.bind(window.console, '🌳'); log(plant)})(plant.model);
 		l_system_draw();
 	}
 
 	function l_system_draw() {
-		scene.add(plant.carnation);
+		scene.add(plant.model);
 		let pot = models['pot'].clone();
 		pot.position.y = 1.5;
 		scene.add(pot);
@@ -198,7 +198,7 @@ init().then(animate);
 
 function animate() {
 	requestAnimationFrame(animate);
-    if (carnation != null) {
+    if (plant_model != null) {
         scene.rotateY(.008);
     }
 

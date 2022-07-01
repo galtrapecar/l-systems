@@ -32,7 +32,7 @@ export class Carnation {
     }
 
     constructor(system, startingPosition, models, seed) {
-        this.carnation = new Object3D();
+        this.model = new Object3D();
         this.lehmer16 = new Lehmer16(seed);
         this.system = system;
         this.models = models;
@@ -69,7 +69,7 @@ export class Carnation {
         this.state.position.add(position);
 
         _model.position.copy(this.state.position);
-        this.carnation.add(_model);
+        this.model.add(_model);
     }
 
     addStem() {
@@ -89,7 +89,7 @@ export class Carnation {
             }
         }
 
-        this.carnation.add(_model);
+        this.model.add(_model);
     }
 
     addBud() {
@@ -97,7 +97,7 @@ export class Carnation {
         let _model = model.clone();
 
         _model.position.copy(this.state.position);
-        this.carnation.add(_model);
+        this.model.add(_model);
     }
 
     calculatePositionDisplace() {
