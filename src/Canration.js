@@ -7,6 +7,7 @@ import { Lehmer16 } from './Lehmer16.js';
 // 7994
 // 8727
 // 4481
+// 13619
 
 export class Carnation {
     static IAAdependent = false;
