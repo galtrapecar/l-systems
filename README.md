@@ -4,7 +4,7 @@ Attempt at procedual generation using l-systems and three.js
 
 Preview at: https://htmlpreview.github.io/?https://github.com/galtrapecar/l-systems/blob/main/carnation_demo.html
 
-# Before running:
+# Before running
 
 1. Install three, webpack and webpack-cli
 
